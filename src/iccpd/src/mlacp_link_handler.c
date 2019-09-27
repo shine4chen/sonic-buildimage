@@ -56,6 +56,7 @@ typedef enum route_manipulate_type
 *
 * ***************************************/
 char g_ipv4_str[INET_ADDRSTRLEN];
+char g_ipv6_str[INET6_ADDRSTRLEN];
 
 /*****************************************
 * Tool : show ip string
@@ -70,6 +71,14 @@ char *show_ip_str(uint32_t ipv4_addr)
     inet_ntop(AF_INET, &in_addr, g_ipv4_str, INET_ADDRSTRLEN);
 
     return g_ipv4_str;
+}
+
+char *show_ipv6_str(char *ipv6_addr)
+{
+    memset(g_ipv6_str, 0, sizeof(g_ipv6_str));
+    inet_ntop(AF_INET6, ipv6_addr, g_ipv6_str, INET6_ADDRSTRLEN);
+
+    return g_ipv6_str;
 }
 
 static int getHwAddr(char *buff, char *mac)
@@ -95,103 +104,227 @@ static int getHwAddr(char *buff, char *mac)
     return 0;
 }
 
-/* Set an entry in the ARP cache. */
 int mlacp_fsm_arp_set(char *ifname, uint32_t ip, char *mac)
 {
-    struct arpreq arpreq;
-    struct sockaddr_in *sin;
+    struct System *sys = NULL;
+    struct LocalInterface *lif = NULL;
     struct in_addr ina;
-    int flags;
-    int rc;
-    int sock_fd = 0;
+    uint8_t mac_addr[ETHER_ADDR_LEN];
+
+    struct
+    {
+        struct nlmsghdr	n;
+        struct ndmsg		ndm;
+        char			buf[256];
+    } req =
+    {
+        .n.nlmsg_len = NLMSG_LENGTH(sizeof(struct ndmsg)),
+        .n.nlmsg_flags = NLM_F_REQUEST|NLM_F_CREATE|NLM_F_REPLACE,
+        .n.nlmsg_type = RTM_NEWNEIGH,
+        .ndm.ndm_family = AF_INET,
+        .ndm.ndm_state = NUD_REACHABLE,
+    };
 
     ICCPD_LOG_DEBUG(__FUNCTION__, "Set arp entry for IP:%s  MAC:%s  ifname:%s", show_ip_str(htonl(ip)), mac, ifname);
 
-    if (ifname == NULL || ip == 0 || mac == NULL)
+    if ((sys = system_get_instance()) == NULL)
     {
-        return MCLAG_ERROR;
+        ICCPD_LOG_DEBUG(__FUNCTION__, "get sys error.");
+        return -1;
     }
 
-    /*you must add this becasue some system will return "Invlid argument"
-       because some argument isn't zero */
-    memset(&arpreq, 0, sizeof(struct arpreq));
-    sin = (struct sockaddr_in *)&arpreq.arp_pa;
-    memset(sin, 0, sizeof(struct sockaddr_in));
-    sin->sin_family = AF_INET;
+    if ((lif = local_if_find_by_name(ifname)) == NULL)
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__, "get lif error.");
+        return -1;
+    }
+    req.ndm.ndm_ifindex = lif->ifindex;
+
     ina.s_addr = htonl(ip);
-    memcpy(&sin->sin_addr, (char *)&ina, sizeof(struct in_addr));
-
-    if (getHwAddr((char *)arpreq.arp_ha.sa_data, mac) < 0)
+    if (addattr_l(&req.n, sizeof(req), NDA_DST, (char *)&ina, 4) < 0)
     {
-        return MCLAG_ERROR;
+        ICCPD_LOG_DEBUG(__FUNCTION__, "add NDA_DST error.");
+        return -1;
     }
 
-    strncpy(arpreq.arp_dev, ifname, 15);
+    parseMacString(mac, mac_addr);
 
-    flags = ATF_COM;  //note, must set flag, if not,you will get error
-
-    arpreq.arp_flags = flags;
-
-    sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sock_fd < 0)
+    if (addattr_l(&req.n, sizeof(req), NDA_LLADDR, mac_addr, 6) < 0)
     {
-        return MCLAG_ERROR;
+        ICCPD_LOG_DEBUG(__FUNCTION__, "add NDA_LLADDR error.");
+        return -1;
     }
 
-    rc = ioctl(sock_fd, SIOCSARP, &arpreq);
-    if (rc < 0)
+    if (rtnl_talk(&sys->rth, &req.n, NULL, 0) < 0)
     {
-        close(sock_fd);
-        return MCLAG_ERROR;
+        ICCPD_LOG_DEBUG(__FUNCTION__, "rtnl_talk error.");
+        return -1;
     }
-
-    close(sock_fd);
 
     return 0;
 }
 
-/* Delete an entry from the ARP cache. */
 int mlacp_fsm_arp_del(char *ifname, uint32_t ip)
 {
-    struct arpreq arpreq;
-    struct sockaddr_in *sin;
+    struct System* sys = NULL;
+    struct LocalInterface *lif = NULL;
     struct in_addr ina;
-    int rc;
-    int sock_fd = 0;
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "Del arp entry for IP : %s ifname:%s", show_ip_str(htonl(ip)), ifname);
-
-    if (ifname == NULL || ip == 0)
+    struct
     {
-        return MCLAG_ERROR;
+        struct nlmsghdr	n;
+        struct ndmsg		ndm;
+        char			buf[256];
+    } req =
+    {
+        .n.nlmsg_len = NLMSG_LENGTH(sizeof(struct ndmsg)),
+        .n.nlmsg_flags = NLM_F_REQUEST,
+        .n.nlmsg_type = RTM_DELNEIGH,
+        .ndm.ndm_family = AF_INET,
+        .ndm.ndm_state = NUD_REACHABLE,
+    };
+
+    ICCPD_LOG_DEBUG(__FUNCTION__, "Del arp entry for IP: %s ifname:%s", show_ip_str(htonl(ip)), ifname);
+
+    if ((sys = system_get_instance()) == NULL)
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__, "get sys error.");
+        return -1;
     }
 
-    /*you must add this becasue some system will return "Invlid argument"
-       because some argument isn't zero */
-    memset(&arpreq, 0, sizeof(struct arpreq));
+    if ((lif = local_if_find_by_name(ifname)) == NULL)
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__, "get lif error.");
+        return -1;
+    }
 
-    sin = (struct sockaddr_in *)&arpreq.arp_pa;
-    memset(sin, 0, sizeof(struct sockaddr_in));
-    sin->sin_family = AF_INET;
+    req.ndm.ndm_ifindex = lif->ifindex;
+
     ina.s_addr = htonl(ip);
-    memcpy(&sin->sin_addr, (char *)&ina, sizeof(struct in_addr));
-
-    strncpy(arpreq.arp_dev, ifname, 15);
-
-    sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sock_fd < 0)
+    if (addattr_l(&req.n, sizeof(req), NDA_DST, (char *)&ina, 4) < 0)
     {
-        return MCLAG_ERROR;
+        ICCPD_LOG_DEBUG(__FUNCTION__, "add NDA_DST error.");
+        return -1;
     }
 
-    rc = ioctl(sock_fd, SIOCDARP, &arpreq);
-    if (rc < 0)
+    if (rtnl_talk(&sys->rth, &req.n, NULL, 0) < 0)
     {
-        close(sock_fd);
-        return MCLAG_ERROR;
+        ICCPD_LOG_DEBUG(__FUNCTION__, "rtnl_talk error.");
+        return -1;
     }
 
-    close(sock_fd);
+    return 0;
+}
+
+int mlacp_fsm_ndisc_set(char *ifname, char *ipv6, char *mac)
+{
+    struct System* sys = NULL;
+    struct LocalInterface *lif = NULL;
+    uint8_t mac_addr[ETHER_ADDR_LEN];
+
+    struct
+    {
+        struct nlmsghdr	n;
+        struct ndmsg		ndm;
+        char			buf[256];
+    } req =
+    {
+        .n.nlmsg_len = NLMSG_LENGTH(sizeof(struct ndmsg)),
+        .n.nlmsg_flags = NLM_F_REQUEST|NLM_F_CREATE|NLM_F_REPLACE,
+        .n.nlmsg_type = RTM_NEWNEIGH,
+        .ndm.ndm_family = AF_INET6,
+        .ndm.ndm_state = NUD_REACHABLE,
+    };
+
+    ICCPD_LOG_DEBUG(__FUNCTION__, "Set nd entry for IPv6:%s  MAC:%s  ifname:%s", show_ipv6_str(ipv6), mac, ifname);
+
+    if ((sys = system_get_instance()) == NULL)
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__, "get sys error.");
+        return -1;
+    }
+
+    if ((lif = local_if_find_by_name(ifname)) == NULL)
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__, "get lif error.");
+        return -1;
+    }
+
+    req.ndm.ndm_ifindex = lif->ifindex;
+
+    if (addattr_l(&req.n, sizeof(req), NDA_DST, ipv6, 16) < 0)
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__, "add NDA_DST error.");
+        return -1;
+    }
+
+    parseMacString(mac, mac_addr);
+
+    if (addattr_l(&req.n, sizeof(req), NDA_LLADDR, mac_addr, 6) < 0)
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__, "add NDA_LLADDR error.");
+        return -1;
+    }
+
+    ICCPD_LOG_DEBUG(__FUNCTION__, "set nd entry(%s, %s, %s) by rtnl_talk.", ifname, show_ipv6_str(ipv6), mac);
+
+    if (rtnl_talk(&sys->rth, &req.n, NULL, 0) < 0)
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__, "rtnl_talk error.");
+        return -1;
+    }
+
+    return 0;
+}
+
+int mlacp_fsm_ndisc_del(char *ifname, char *ipv6)
+{
+    struct System* sys = NULL;
+    struct LocalInterface *lif = NULL;
+
+    struct
+    {
+        struct nlmsghdr	n;
+        struct ndmsg		ndm;
+        char			buf[256];
+    } req =
+    {
+        .n.nlmsg_len = NLMSG_LENGTH(sizeof(struct ndmsg)),
+        .n.nlmsg_flags = NLM_F_REQUEST,
+        .n.nlmsg_type = RTM_DELNEIGH,
+        .ndm.ndm_family = AF_INET6,
+        .ndm.ndm_state = NUD_REACHABLE,
+    };
+
+    ICCPD_LOG_DEBUG(__FUNCTION__, "Del nd entry for IPv6: %s ifname:%s", show_ip_str(ipv6), ifname);
+
+    if ((sys = system_get_instance()) == NULL)
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__, "get sys error.");
+        return -1;
+    }
+
+    if ((lif = local_if_find_by_name(ifname)) == NULL)
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__, "get lif error.");
+        return -1;
+    }
+
+    req.ndm.ndm_ifindex = lif->ifindex;
+
+    if (addattr_l(&req.n, sizeof(req), NDA_DST, ipv6, 16) < 0)
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__, "add NDA_DST error.");
+        return -1;
+    }
+
+    ICCPD_LOG_DEBUG(__FUNCTION__, "del nd entry(%s, %s) by rtnl_talk.", ifname, show_ipv6_str(ipv6));
+
+    if (rtnl_talk(&sys->rth, &req.n, NULL, 0) < 0)
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__, "rtnl_talk error.");
+        return -1;
+    }
 
     return 0;
 }
@@ -213,7 +346,7 @@ static int arp_set_handler(struct CSM* csm,
         goto del_arp;
 
     /* Process Add */
- add_arp:
+add_arp:
     if (MLACP(csm).current_state != MLACP_STATE_EXCHANGE)
         return 0;
 
@@ -223,7 +356,7 @@ static int arp_set_handler(struct CSM* csm,
         arp_msg = (struct ARPMsg*)msg->buf;
 
         /* only process add*/
-        if (arp_msg->op_type == ARP_SYNC_DEL)
+        if (arp_msg->op_type == NEIGH_SYNC_DEL)
             continue;
 
         /* find the ARP for lif_list*/
@@ -239,7 +372,7 @@ static int arp_set_handler(struct CSM* csm,
     }
     goto done;
 
- del_arp:
+del_arp:
     /* Process Del */
     TAILQ_FOREACH(msg, &MLACP(csm).arp_list, tail)
     {
@@ -250,7 +383,7 @@ static int arp_set_handler(struct CSM* csm,
             continue;
 
         /* don't process del*/
-        if (arp_msg->op_type == ARP_SYNC_DEL)
+        if (arp_msg->op_type == NEIGH_SYNC_DEL)
             continue;
 
         mlacp_fsm_arp_del(arp_msg->ifname, arp_msg->ipv4_addr);
@@ -259,7 +392,74 @@ static int arp_set_handler(struct CSM* csm,
                         show_ip_str(htonl(arp_msg->ipv4_addr)));
     }
 
- done:
+done:
+    return 0;
+}
+
+static int ndisc_set_handler(struct CSM* csm,
+                             struct LocalInterface* lif,
+                             int add)
+{
+    struct Msg* msg = NULL;
+    struct NDISCMsg* ndisc_msg = NULL;
+    char mac_str[18] = "";
+
+    if (!csm || !lif)
+        return 0;
+
+    if (add)
+        goto add_ndisc;
+    else
+        goto del_ndisc;
+
+    /* Process Add */
+add_ndisc:
+    if (MLACP(csm).current_state != MLACP_STATE_EXCHANGE)
+        return 0;
+
+    TAILQ_FOREACH(msg, &MLACP(csm).ndisc_list, tail)
+    {
+        mac_str[0] = '\0';
+        ndisc_msg = (struct NDISCMsg*)msg->buf;
+
+        /* only process add*/
+        if (ndisc_msg->op_type == NEIGH_SYNC_DEL)
+            continue;
+
+        /* find the ARP for lif_list*/
+        if (strcmp(lif->name, ndisc_msg->ifname) != 0)
+            continue;
+
+        sprintf(mac_str, "%02x:%02x:%02x:%02x:%02x:%02x", ndisc_msg->mac_addr[0], ndisc_msg->mac_addr[1], ndisc_msg->mac_addr[2],
+                ndisc_msg->mac_addr[3], ndisc_msg->mac_addr[4], ndisc_msg->mac_addr[5]);
+
+        mlacp_fsm_ndisc_set(ndisc_msg->ifname, (char*)ndisc_msg->ipv6_addr, mac_str);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Add dynamic ND to kernel [%s]",
+                        show_ipv6_str((char *)ndisc_msg->ipv6_addr));
+    }
+    goto done;
+
+del_ndisc:
+    /* Process Del */
+    TAILQ_FOREACH(msg, &MLACP(csm).ndisc_list, tail)
+    {
+        ndisc_msg = (struct NDISCMsg*)msg->buf;
+
+        /* find the ND for lif_list*/
+        if (strcmp(lif->name, ndisc_msg->ifname) != 0)
+            continue;
+
+        /* don't process del*/
+        if (ndisc_msg->op_type == NEIGH_SYNC_DEL)
+            continue;
+
+        mlacp_fsm_ndisc_del(ndisc_msg->ifname, (char*)ndisc_msg->ipv6_addr);
+        /* link broken, del all static arp on the lif*/
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Del dynamic ND [%s]",
+                        show_ipv6_str((char *)ndisc_msg->ipv6_addr));
+    }
+
+done:
     return 0;
 }
 
@@ -286,20 +486,15 @@ static void set_route_by_linux_route(struct CSM* csm,
         return;
 
     sprintf(ipv4_dest_str, "%s", show_ip_str(htonl(local_if->ipv4_addr)));
-    ptr = strrchr(ipv4_dest_str, '.'); strcpy(ptr, ".0\0");
+    ptr = strrchr(ipv4_dest_str, '.');
+    strcpy(ptr, ".0\0");
 
-#if 1
     /* set gw route*/
     /*sprintf(syscmd, "ip route %s %s/%d proto static metric 200 nexthop via %s > /dev/null 2>&1",*/
     sprintf(syscmd, "ip route %s %s/%d metric 200 nexthop via %s > /dev/null 2>&1",
             (is_add) ? "add" : "del", ipv4_dest_str, local_if->prefixlen,
             csm->peer_ip);
-#else
-    // set interface route
-    sprintf(syscmd, "route %s -net %s/%d %s > /dev/null 2>&1",
-            (is_add) ? "add" : "del", ipv4_dest_str, local_if->prefixlen,
-            local_if->name);
-#endif
+
 
     ret = system(syscmd);
     ICCPD_LOG_DEBUG(__FUNCTION__, "  %s  ret = %d", syscmd, ret);
@@ -374,12 +569,14 @@ static void set_l3_itf_state(struct CSM *csm,
             if (strncmp(set_l3_local_if->name, VLAN_PREFIX, 4) != 0)
             {
                 arp_set_handler(csm, set_l3_local_if, 0);     /* del arp*/
+                ndisc_set_handler(csm, set_l3_local_if, 0);     /* del nd*/
             }
         }
         else if (route_type == ROUTE_DEL)
         {
             /*set_route_by_linux_route(csm, set_l3_local_if, 0);*/    /*del static route by linux route tool*/
             arp_set_handler(csm, set_l3_local_if, 1);     /* add arp*/
+            ndisc_set_handler(csm, set_l3_local_if, 1);     /* add nd*/
         }
     }
 
@@ -898,7 +1095,7 @@ void syn_arp_info_to_peer(struct CSM *csm, struct LocalInterface *local_if)
                 continue;
 
             arp_msg = (struct ARPMsg*)msg->buf;
-            arp_msg->op_type = ARP_SYNC_ADD;
+            arp_msg->op_type = NEIGH_SYNC_ADD;
 
             if (iccp_csm_init_msg(&msg_send, (char*)arp_msg, sizeof(struct ARPMsg)) == 0)
             {
@@ -909,6 +1106,42 @@ void syn_arp_info_to_peer(struct CSM *csm, struct LocalInterface *local_if)
             else
                 ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue ARP[ADD] for %s",
                                 show_ip_str(htonl(arp_msg->ipv4_addr)));
+        }
+    }
+
+    return;
+}
+
+void syn_ndisc_info_to_peer(struct CSM *csm, struct LocalInterface *local_if)
+{
+    struct Msg *msg = NULL;
+    struct NDISCMsg *ndisc_msg = NULL, *ndisc_info = NULL;
+    struct Msg *msg_send = NULL;
+
+    if (!csm || !local_if)
+        return;
+
+    if (!TAILQ_EMPTY(&(MLACP(csm).ndisc_list)))
+    {
+        TAILQ_FOREACH(msg, &MLACP(csm).ndisc_list, tail)
+        {
+            ndisc_info = (struct NDISCMsg*)msg->buf;
+
+            if (strcmp(ndisc_info->ifname, local_if->name) != 0)
+                continue;
+
+            ndisc_msg = (struct NDISCMsg*)msg->buf;
+            ndisc_msg->op_type = NEIGH_SYNC_ADD;
+
+            if (iccp_csm_init_msg(&msg_send, (char*)ndisc_msg, sizeof(struct NDISCMsg)) == 0)
+            {
+                TAILQ_INSERT_TAIL(&(MLACP(csm).ndisc_msg_list), msg_send, tail);
+                ICCPD_LOG_DEBUG( __FUNCTION__, "Enqueue ND[ADD] for %s",
+                                 show_ipv6_str((char*)ndisc_msg->ipv6_addr));
+            }
+            else
+                ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue ND[ADD] for %s",
+                                show_ipv6_str((char*)ndisc_msg->ipv6_addr));
         }
     }
 
@@ -944,6 +1177,7 @@ void update_stp_peer_link(struct CSM *csm,
             if (po_state == 1 && lif->po_active == 1)
             {
                 syn_arp_info_to_peer(csm, lif);
+                syn_ndisc_info_to_peer(csm, lif);
             }
         }
         else
@@ -968,6 +1202,7 @@ void update_stp_peer_link(struct CSM *csm,
                 if (po_state == 1 && lif->po_active == 1)
                 {
                     syn_arp_info_to_peer(csm, vlan->vlan_itf);
+                    syn_ndisc_info_to_peer(csm, vlan->vlan_itf);
                 }
             }
         }
@@ -1069,7 +1304,7 @@ uint8_t set_mac_local_age_flag(struct CSM *csm, struct MACMsg* mac_msg, uint8_t 
         new_age_flag &= ~MAC_AGE_LOCAL;
 
         ICCPD_LOG_DEBUG(__FUNCTION__, "Remove local age flag: %d ifname  %s, add %s vlan-id %d, age_flag %d",
-                            new_age_flag, mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);
+                        new_age_flag, mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);
 
         /*send mac MAC_SYNC_ADD message to peer*/
         if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
@@ -1088,7 +1323,7 @@ uint8_t set_mac_local_age_flag(struct CSM *csm, struct MACMsg* mac_msg, uint8_t 
         new_age_flag |= MAC_AGE_LOCAL;
 
         ICCPD_LOG_DEBUG(__FUNCTION__, "Add local age flag: %s, add %s vlan-id %d, age_flag %d",
-                            mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);
+                        mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);
 
         /*send mac MAC_SYNC_DEL message to peer*/
         if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
@@ -1257,7 +1492,7 @@ static void mlacp_conn_handler_fdb(struct CSM* csm)
             /*mac_msg->age_flag &= ~MAC_AGE_PEER;*/
 
             /*If MAC with local age flag, dont sync to peer. Such MAC only exist when peer is warm-reboot.
-              If peer is warm-reboot, peer age flag is not set when connection is lost. 
+              If peer is warm-reboot, peer age flag is not set when connection is lost.
               When MAC is aged in local switch, this MAC is not deleted for no peer age flag.
               After warm-reboot, this MAC must be learnt by peer and sync to local switch*/
             if (!(mac_msg->age_flag & MAC_AGE_LOCAL))
@@ -1299,8 +1534,8 @@ static void mlacp_fix_bridge_mac(struct CSM* csm)
     {
         memset(macaddr, 0, 64);
         snprintf(macaddr, 64, "%02x:%02x:%02x:%02x:%02x:%02x",
-             MLACP(csm).system_id[0], MLACP(csm).system_id[1], MLACP(csm).system_id[2],
-             MLACP(csm).system_id[3], MLACP(csm).system_id[4], MLACP(csm).system_id[5]);
+                 MLACP(csm).system_id[0], MLACP(csm).system_id[1], MLACP(csm).system_id[2],
+                 MLACP(csm).system_id[3], MLACP(csm).system_id[4], MLACP(csm).system_id[5]);
 
         /*When changing the mac of a vlan member port, the mac of Bridge will be changed.*/
         /*The Bridge mac can not be the same as peer system id, so fix the Bridge MAC address here.*/
@@ -1355,36 +1590,10 @@ void mlacp_peer_conn_handler(struct CSM* csm)
 
     mlacp_conn_handler_fdb(csm);
 
-#if 0
-    // When peer-link ready, suppose all MLAG link are alive
-    LIST_FOREACH(pif, &(MLACP(csm).pif_list), mlacp_next)
-    {
-        pif->po_active = 1;
-    }
-#endif
     LIST_FOREACH(lif, &(MLACP(csm).lif_list), mlacp_next)
     {
         if (lif->type == IF_T_PORT_CHANNEL)
         {
-#if 0
-            if (local_if_is_l3_mode(lif))
-            {
-                set_route_by_linux_route( csm,  lif,  1);
-            }
-            else
-            {
-                LIST_FOREACH(vlan, &(lif->vlan_list), port_next)
-                {
-                    if (!vlan->vlan_itf)
-                        continue;
-                    if (!local_if_is_l3_mode(vlan->vlan_itf))
-                        continue;
-
-                    set_route_by_linux_route(csm, vlan->vlan_itf, 1); /* add static route by linux route tool*/
-                }
-            }
-#endif
-
             mlacp_portchannel_state_handler(csm, lif, (lif->state == PORT_STATE_UP) ? 1 : 0);
         }
     }
@@ -1614,7 +1823,7 @@ int iccp_connect_syncd()
     count = 0;
     return 0;
 
- conn_fail:
+conn_fail:
     if (count == 0)
         ICCPD_LOG_DEBUG(__FUNCTION__, "%s:%d, mclag syncd socket connect fail",
                         __FUNCTION__, __LINE__);
@@ -1675,16 +1884,6 @@ void do_mac_update_from_syncd(char mac_str[ETHER_ADDR_STR_LEN], uint16_t vid, ch
     mac_msg->age_flag = 0;
 
     ICCPD_LOG_DEBUG(__FUNCTION__, "Recv MAC msg vid %d mac %s port %s optype %s ", vid, mac_str, ifname, op_type == MAC_SYNC_ADD ? "add" : "del");
-    /*Debug*/
-    #if 0
-    /* dump receive MAC info*/
-    fprintf(stderr, "\n======== MAC Update==========\n");
-    fprintf(stderr, "  MAC    =  %s\n", mac_str);
-    fprintf(stderr, "  vlan id = %d\n", vid);
-    fprintf(stderr, "  fdb type = %s\n", fdb_type == MAC_TYPE_STATIC ? "static" : "dynamic");
-    fprintf(stderr, "  op type = %s\n", op_type == MAC_SYNC_ADD ? "add" : "del");
-    fprintf(stderr, "==============================\n");
-    #endif
 
     /* Find MLACP itf, may be mclag enabled port-channel*/
     LIST_FOREACH(csm, &(sys->csm_list), next)
@@ -1972,6 +2171,9 @@ char * mclagd_ctl_cmd_str(int req_type)
         case INFO_TYPE_DUMP_ARP:
             return "dump arp";
 
+        case INFO_TYPE_DUMP_NDISC:
+            return "dump nd";
+
         case INFO_TYPE_DUMP_MAC:
             return "dump mac";
 
@@ -2192,6 +2394,46 @@ void mclagd_ctl_handle_dump_arp(int client_fd, int mclag_id)
     return;
 }
 
+void mclagd_ctl_handle_dump_ndisc(int client_fd, int mclag_id)
+{
+    char * Pbuf = NULL;
+    char buf[512] = { 0 };
+    int ndisc_num = 0;
+    int ret = 0;
+    struct mclagd_reply_hdr *hd = NULL;
+    int len_tmp = 0;
+
+    ret = iccp_ndisc_dump(&Pbuf, &ndisc_num, mclag_id);
+    if (ret != EXEC_TYPE_SUCCESS)
+    {
+        len_tmp = sizeof(struct mclagd_reply_hdr);
+        memcpy(buf, &len_tmp, sizeof(int));
+        hd = (struct mclagd_reply_hdr *)(buf + sizeof(int));
+        hd->exec_result = ret;
+        hd->info_type = INFO_TYPE_DUMP_NDISC;
+        hd->data_len = 0;
+        mclagd_ctl_sock_write(client_fd, buf, MCLAGD_REPLY_INFO_HDR);
+
+        if (Pbuf)
+            free(Pbuf);
+
+        return;
+    }
+
+    hd = (struct mclagd_reply_hdr *)(Pbuf + sizeof(int));
+    hd->exec_result = EXEC_TYPE_SUCCESS;
+    hd->info_type = INFO_TYPE_DUMP_NDISC;
+    hd->data_len = ndisc_num * sizeof(struct mclagd_ndisc_msg);
+    len_tmp = (hd->data_len + sizeof(struct mclagd_reply_hdr));
+    memcpy(Pbuf, &len_tmp, sizeof(int));
+    mclagd_ctl_sock_write(client_fd, Pbuf, MCLAGD_REPLY_INFO_HDR + hd->data_len);
+
+    if (Pbuf)
+        free(Pbuf);
+
+    return;
+}
+
 void mclagd_ctl_handle_dump_mac(int client_fd, int mclag_id)
 {
     char * Pbuf = NULL;
@@ -2341,6 +2583,10 @@ int mclagd_ctl_interactive_process(int client_fd)
 
         case INFO_TYPE_DUMP_ARP:
             mclagd_ctl_handle_dump_arp(client_fd, req->mclag_id);
+            break;
+
+        case INFO_TYPE_DUMP_NDISC:
+            mclagd_ctl_handle_dump_ndisc(client_fd, req->mclag_id);
             break;
 
         case INFO_TYPE_DUMP_MAC:

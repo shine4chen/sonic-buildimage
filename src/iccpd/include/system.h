@@ -36,6 +36,7 @@
 #include <sys/socket.h>
 
 #include "../include/port.h"
+#include "../include/libnetlink.h"
 
 #define FRONT_PANEL_PORT_PREFIX "Ethernet"
 #define PORTCHANNEL_PREFIX      "PortChannel"
@@ -58,7 +59,9 @@ struct System
     int sync_fd;
     int sync_ctrl_fd;
     int arp_receive_fd;
+    int ndisc_receive_fd;
     int epoll_fd;
+    struct rtnl_handle rth;
 
     struct nl_sock * genric_sock;
     int genric_sock_seq;

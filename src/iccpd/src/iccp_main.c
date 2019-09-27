@@ -129,7 +129,7 @@ void iccpd_signal_handler(int sig)
         return;
     }
 
- retry:
+retry:
     err = write(sys->sig_pipe_w, &warmboot_flag, 1);
     if (err == -1 && errno == EINTR)
         goto retry;
@@ -194,7 +194,7 @@ static int iccpd_signal_init(struct System* sys)
 
     return 0;
 
- close_pipe:
+close_pipe:
     close(sys->sig_pipe_r);
     close(sys->sig_pipe_w);
     return err;

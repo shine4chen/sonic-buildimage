@@ -36,6 +36,7 @@ char *mclagdctl_sock_path = "/var/run/iccpd/mclagdctl.sock";
    Already implemented command:
    mclagdctl -i dump state
    mclagdctl -i dump arp
+   mclagdctl -i dump nd
    mclagdctl -i dump mac
    mclagdctl -i dump portlist local
    mclagdctl -i dump portlist peer
@@ -64,6 +65,14 @@ static struct command_type command_types[] =
         .name = "arp",
         .enca_msg = mclagdctl_enca_dump_arp,
         .parse_msg = mclagdctl_parse_dump_arp,
+    },
+    {
+        .id = ID_CMDTYPE_D_A,
+        .parent_id = ID_CMDTYPE_D,
+        .info_type = INFO_TYPE_DUMP_NDISC,
+        .name = "nd",
+        .enca_msg = mclagdctl_enca_dump_ndisc,
+        .parse_msg = mclagdctl_parse_dump_ndisc,
     },
     {
         .id = ID_CMDTYPE_D_A,
@@ -275,6 +284,24 @@ int mclagdctl_enca_dump_arp(char *msg, int mclag_id, int argc, char **argv)
     return 1;
 }
 
+int mclagdctl_enca_dump_ndisc(char *msg, int mclag_id, int argc, char **argv)
+{
+    struct mclagdctl_req_hdr req;
+
+    if (mclag_id <= 0)
+    {
+        fprintf(stderr, "Need to specify mclag-id through the parameter i !\n");
+        return MCLAG_ERROR;
+    }
+
+    memset(&req, 0, sizeof(struct mclagdctl_req_hdr));
+    req.info_type = INFO_TYPE_DUMP_NDISC;
+    req.mclag_id = mclag_id;
+    memcpy((struct mclagdctl_req_hdr *)msg, &req, sizeof(struct mclagdctl_req_hdr));
+
+    return 1;
+}
+
 int mclagdctl_parse_dump_arp(char *msg, int data_len)
 {
     struct mclagd_arp_msg * arp_info = NULL;
@@ -301,6 +328,38 @@ int mclagdctl_parse_dump_arp(char *msg, int data_len)
                 arp_info->mac_addr[4], arp_info->mac_addr[5]);
         fprintf(stdout, "   ");
         fprintf(stdout, "%-20s", arp_info->ifname);
+        fprintf(stdout, "\n");
+    }
+
+    return 0;
+}
+
+int mclagdctl_parse_dump_ndisc(char *msg, int data_len)
+{
+    struct mclagd_ndisc_msg * ndisc_info = NULL;
+    int len = 0;
+    int count = 0;
+
+    fprintf(stdout, "%-6s", "No.");
+    fprintf(stdout, "%-52s", "IPv6");
+    fprintf(stdout, "%-20s", "MAC");
+    fprintf(stdout, "%-20s", "DEV");
+    fprintf(stdout, "\n");
+
+    len = sizeof(struct mclagd_ndisc_msg);
+
+    for (; data_len >= len; data_len -= len, count++)
+    {
+        ndisc_info = (struct mclagd_ndisc_msg*)(msg + len * count);
+
+        fprintf(stdout, "%-6d", count + 1);
+        fprintf(stdout, "%-52s", ndisc_info->ipv6_addr);
+        fprintf(stdout, "%02x:%02x:%02x:%02x:%02x:%02x",
+                ndisc_info->mac_addr[0], ndisc_info->mac_addr[1],
+                ndisc_info->mac_addr[2], ndisc_info->mac_addr[3],
+                ndisc_info->mac_addr[4], ndisc_info->mac_addr[5]);
+        fprintf(stdout, "   ");
+        fprintf(stdout, "%-20s", ndisc_info->ifname);
         fprintf(stdout, "\n");
     }
 
@@ -528,7 +587,7 @@ static int __mclagdctl_cmd_param_cnt(struct command_type *cmd_type)
 }
 
 static struct command_type *__mclagdctl_get_cmd_by_parent(char *cmd_name,
-                                                          enum id_command_type parent_id)
+        enum id_command_type parent_id)
 {
     int i;
 
@@ -795,7 +854,7 @@ int main(int argc, char **argv)
 
     ret = EXIT_SUCCESS;
 
- mclagdctl_disconnect:
+mclagdctl_disconnect:
     mclagdctl_sock_close();
 
     if (rcv_buf)

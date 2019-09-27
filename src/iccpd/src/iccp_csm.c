@@ -770,7 +770,7 @@ int iccp_csm_init_msg(struct Msg** msg, char* data, int len)
 
     return 0;
 
- err_ret:
+err_ret:
     if (iccp_msg)
     {
         if (iccp_msg->buf)

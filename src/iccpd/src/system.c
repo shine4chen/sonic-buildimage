@@ -56,7 +56,9 @@ void system_init(struct System* sys)
     sys->sync_fd = -1;
     sys->sync_ctrl_fd = -1;
     sys->arp_receive_fd = -1;
+    sys->ndisc_receive_fd = -1;
     sys->epoll_fd = -1;
+    sys->rth.fd = -1;
     sys->family = -1;
     sys->warmboot_start = 0;
     sys->warmboot_exit = 0;
@@ -131,6 +133,8 @@ void system_finalize()
         close(sys->sync_ctrl_fd);
     if (sys->arp_receive_fd > 0)
         close(sys->arp_receive_fd);
+    if (sys->ndisc_receive_fd > 0)
+        close(sys->ndisc_receive_fd);
     if (sys->sig_pipe_r > 0)
         close(sys->sig_pipe_r);
     if (sys->sig_pipe_w > 0)

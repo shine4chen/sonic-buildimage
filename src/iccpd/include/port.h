@@ -102,6 +102,8 @@ struct LocalInterface
     uint8_t state;
     uint32_t ipv4_addr;
     uint8_t prefixlen;
+    uint32_t ipv6_addr[4];
+    uint8_t prefixlen_v6;
 
     uint8_t l3_mode;
     uint8_t l3_mac_addr[ETHER_ADDR_LEN];

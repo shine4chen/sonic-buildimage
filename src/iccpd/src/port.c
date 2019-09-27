@@ -378,7 +378,7 @@ void local_if_destroy(char *ifname)
     else
         goto to_sys_purge;
 
- to_sys_purge:
+to_sys_purge:
     /* sys purge */
     LIST_REMOVE(lif, system_next);
     if (lif->csm)
@@ -386,7 +386,7 @@ void local_if_destroy(char *ifname)
     LIST_INSERT_HEAD(&(sys->lif_purge_list), lif, system_purge_next);
     return;
 
- to_mlacp_purge:
+to_mlacp_purge:
     /* sys & mlacp purge */
     LIST_REMOVE(lif, system_next);
     LIST_REMOVE(lif, mlacp_next);
@@ -398,11 +398,12 @@ void local_if_destroy(char *ifname)
 int local_if_is_l3_mode(struct LocalInterface* local_if)
 {
     int ret = 0;
+    char addr_null[16] = {0};
 
     if (local_if == NULL)
         return 0;
 
-    if (local_if->ipv4_addr != 0)
+    if (local_if->ipv4_addr != 0 || memcmp(local_if->ipv6_addr, addr_null, 16) != 0)
         ret = 1;
 
     return ret;

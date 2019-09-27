@@ -113,7 +113,7 @@ static void cmd_option_register(struct CmdOptionParser* parser, char* syntax, ch
 
     return;
 
- failed:
+failed:
     if (opt_name)
         free(opt_name);
     if (desc_copy != NULL)

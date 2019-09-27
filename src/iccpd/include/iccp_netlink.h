@@ -31,6 +31,23 @@
 
 #include "../include/system.h"
 #include "../include/port.h"
+#include <linux/icmpv6.h>
+#include <linux/ipv6.h>
+
+#define NDISC_NEIGHBOUR_ADVERTISEMENT	136
+#define ND_OPT_TARGET_LL_ADDR 2
+#define NEXTHDR_ICMP 58
+
+struct nd_msg {
+    struct icmp6hdr	icmph;
+    struct in6_addr	target;
+    __u8 opt[0];
+};
+
+struct nd_opt_hdr {
+    __u8 nd_opt_type;
+    __u8 nd_opt_len;
+} __packed;
 
 int iccp_get_port_member_list(struct LocalInterface* lif);
 void iccp_event_handler_obj_input_newlink(struct nl_object *obj, void *arg);
