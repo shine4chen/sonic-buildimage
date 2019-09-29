@@ -27,7 +27,7 @@
 
 #include "../include/port.h"
 
-#define MLCAP_SYNC_PHY_DEV_SEC     1     /*every 1 sec*/
+#define MLCAP_SYNC_PHY_DEV_SEC     1    /* every 1 sec */
 
 #define MLACP(csm_ptr)  (csm_ptr->app_csm.mlacp)
 
@@ -47,7 +47,7 @@ typedef enum MLACP_APP_STATE MLACP_APP_STATE_E;
 /* for sender only*/
 enum MLACP_SYNC_STATE
 {
-    MLACP_SYNC_SYSCONF=0,
+    MLACP_SYNC_SYSCONF = 0,
     MLACP_SYNC_AGGCONF,
     MLACP_SYNC_AGGSTATE,
     MLACP_SYNC_AGGINFO,
@@ -82,7 +82,7 @@ struct mLACP
     uint8_t system_config_changed;
 
     struct Remote_System remote_system;
-    const char* error_msg;
+    const char *error_msg;
     TAILQ_HEAD(mlacp_msg_list, Msg) mlacp_msg_list;
     TAILQ_HEAD(arp_msg_list, Msg) arp_msg_list;
     TAILQ_HEAD(arp_info_list, Msg) arp_list;
@@ -96,14 +96,14 @@ struct mLACP
     LIST_HEAD(pif_list, PeerInterface) pif_list;
 };
 
-void mlacp_init(struct CSM* csm, int all);
-void mlacp_finalize(struct CSM* csm);
-void mlacp_fsm_transit(struct CSM* csm);
-void mlacp_enqueue_msg(struct CSM*, struct Msg*);
-struct Msg* mlacp_dequeue_msg(struct CSM*);
+void mlacp_init(struct CSM *csm, int all);
+void mlacp_finalize(struct CSM *csm);
+void mlacp_fsm_transit(struct CSM *csm);
+void mlacp_enqueue_msg(struct CSM *, struct Msg *);
+struct Msg *mlacp_dequeue_msg(struct CSM *);
 
 /* from app_csm*/
-extern int mlacp_bind_local_if(struct CSM* csm, struct LocalInterface* local_if);
-extern int mlacp_unbind_local_if(struct LocalInterface* local_if);
+extern int mlacp_bind_local_if(struct CSM *csm, struct LocalInterface *local_if);
+extern int mlacp_unbind_local_if(struct LocalInterface *local_if);
 
-#endif /* _MLACP_HANDLER_H */
+#endif                          /* _MLACP_HANDLER_H */

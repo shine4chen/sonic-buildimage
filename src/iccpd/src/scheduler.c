@@ -48,19 +48,19 @@
 *
 ******************************************************/
 
-static int session_conn_thread_lock(pthread_mutex_t *conn_mutex)
+static int session_conn_thread_lock(pthread_mutex_t * conn_mutex)
 {
-    return 1; /*pthread_mutex_lock(conn_mutex);*/
+    return 1;   /* pthread_mutex_lock(conn_mutex); */
 }
 
-static int session_conn_thread_trylock(pthread_mutex_t *conn_mutex)
+static int session_conn_thread_trylock(pthread_mutex_t * conn_mutex)
 {
-    return 0; /*pthread_mutex_trylock(conn_mutex);*/
+    return 0;   /* pthread_mutex_trylock(conn_mutex); */
 }
 
-static int session_conn_thread_unlock(pthread_mutex_t *conn_mutex)
+static int session_conn_thread_unlock(pthread_mutex_t * conn_mutex)
 {
-    return 1;/* pthread_mutex_unlock(conn_mutex);*/
+    return 1;   /* pthread_mutex_unlock(conn_mutex); */
 }
 
 static void heartbeat_check(struct CSM *csm)
@@ -71,9 +71,9 @@ static void heartbeat_check(struct CSM *csm)
         return;
     }
 
-    if ( (time(NULL) - csm->heartbeat_update_time) > HEARTBEAT_TIMEOUT_SEC)
+    if ((time(NULL) - csm->heartbeat_update_time) > HEARTBEAT_TIMEOUT_SEC)
     {
-        /* hearbeat timeout*/
+        /* hearbeat timeout */
         ICCPD_LOG_INFO(__FUNCTION__, "iccpd connection timeout (heartbeat)");
         scheduler_session_disconnect_handler(csm);
     }
@@ -94,8 +94,8 @@ static void heartbeat_update(struct CSM *csm)
 /* Transit FSM of all connections */
 static int scheduler_transit_fsm()
 {
-    struct CSM* csm = NULL;
-    struct System* sys = NULL;
+    struct CSM *csm = NULL;
+    struct System *sys = NULL;
 
     if ((sys = system_get_instance()) == NULL)
         return MCLAG_ERROR;
@@ -121,13 +121,13 @@ static int scheduler_transit_fsm()
 }
 
 /* Receive packets call back function */
-int scheduler_csm_read_callback(struct CSM* csm)
+int scheduler_csm_read_callback(struct CSM *csm)
 {
-    struct Msg* msg = NULL;
-    /*peer message*/
+    struct Msg *msg = NULL;
+    /* peer message */
     char *peer_msg = g_csm_buf;
-    LDPHdr* ldp_hdr = (LDPHdr*)peer_msg;
-    char* data = &peer_msg[sizeof(LDPHdr)];
+    LDPHdr *ldp_hdr = (LDPHdr *)peer_msg;
+    char *data = &peer_msg[sizeof(LDPHdr)];
     size_t data_len = 0;
     size_t pos = 0;
     int recv_len = 0, len = 0, retval;
@@ -153,7 +153,7 @@ int scheduler_csm_read_callback(struct CSM* csm)
             goto recv_err;
         }
         recv_len += len;
-        /*usleep(100);*/
+        /* usleep(100); */
     }
 
     data_len = ntohs(ldp_hdr->msg_len) - MSG_L_INCLUD_U_BIT_MSG_T_L_FIELDS;
@@ -174,7 +174,7 @@ int scheduler_csm_read_callback(struct CSM* csm)
         }
         data_len -= recv_len;
         pos += recv_len;
-        /*usleep(100);*/
+        /* usleep(100); */
     }
 
     retval = iccp_csm_init_msg(&msg, peer_msg, ntohs(ldp_hdr->msg_len) + MSG_L_INCLUD_U_BIT_MSG_T_L_FIELDS);
@@ -198,12 +198,12 @@ int scheduler_server_accept()
 {
     int new_fd;
     int ret = MCLAG_ERROR;
-    struct CSM* csm = NULL;
-    struct System* sys = NULL;
+    struct CSM *csm = NULL;
+    struct System *sys = NULL;
     struct sockaddr_in client_addr;
     socklen_t addr_len;
 
-    if ((sys = system_get_instance()) == NULL )
+    if ((sys = system_get_instance()) == NULL)
     {
         return MCLAG_ERROR;
     }
@@ -223,27 +223,27 @@ int scheduler_server_accept()
         csm = system_get_csm_by_peer_ip(inet_ntoa(client_addr.sin_addr));
         if (!csm)
         {
-            /* can't find csm with peer ip*/
+            /* can't find csm with peer ip */
             ICCPD_LOG_INFO(__FUNCTION__, "csm null with peer ip [%s]", inet_ntoa(client_addr.sin_addr));
             goto reject_client;
         }
 
         if (csm->sock_fd > 0)
         {
-            /* peer already connected*/
+            /* peer already connected */
             ICCPD_LOG_INFO(__FUNCTION__, "csm sock is connected with peer ip [%s]", inet_ntoa(client_addr.sin_addr));
             goto reject_client;
         }
 
         if ((ret = scheduler_check_csm_config(csm)) < 0)
         {
-            /* csm config error*/
+            /* csm config error */
             ICCPD_LOG_INFO(__FUNCTION__, "csm config error with peer ip [%s]", inet_ntoa(client_addr.sin_addr));
             goto reject_client;
         }
     }
 
-    /* Accept*/
+    /* Accept */
     goto accept_client;
 
 reject_client:
@@ -274,9 +274,9 @@ accept_client:
     return 0;
 }
 
-void iccp_get_start_type(struct System* sys)
+void iccp_get_start_type(struct System *sys)
 {
-    FILE* fp;
+    FILE *fp;
 
     memset(g_csm_buf, 0, CSM_BUFFER_SIZE);
 
@@ -299,47 +299,43 @@ void iccp_get_start_type(struct System* sys)
 /* scheduler initialization */
 void scheduler_init()
 {
-    struct System* sys = NULL;
+    struct System *sys = NULL;
 
     if (!(sys = system_get_instance()))
         return;
 
     iccp_get_start_type(sys);
-    /*Get kernel interface and port */
+    /* Get kernel interface and port */
     iccp_sys_local_if_list_get_init();
     iccp_sys_local_if_list_get_addr();
-    /*Interfaces must be created before this func called*/
+    /* Interfaces must be created before this func called */
     iccp_config_from_file(sys->config_file_path);
 
-    /*Get kernel ARP info */
+    /* Get kernel ARP info */
     iccp_neigh_get_init();
-    iccp_rtnl_init();
 
     if (iccp_connect_syncd() < 0)
     {
-        ICCPD_LOG_DEBUG(__FUNCTION__, "%s:%d, syncd info socket connect fail",
-                        __FUNCTION__, __LINE__);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "%s:%d, syncd info socket connect fail", __FUNCTION__, __LINE__);
     }
     else
     {
-        ICCPD_LOG_DEBUG(__FUNCTION__, "%s:%d, syncd info socket connect success",
-                        __FUNCTION__, __LINE__);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "%s:%d, syncd info socket connect success", __FUNCTION__, __LINE__);
     }
 
     if (mclagd_ctl_sock_create() < 0)
     {
-        ICCPD_LOG_DEBUG(__FUNCTION__, "%s:%d, mclagd ctl info socket connect fail",
-                        __FUNCTION__, __LINE__);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "%s:%d, mclagd ctl info socket connect fail", __FUNCTION__, __LINE__);
     }
 
     return;
 }
 
-extern int mlacp_prepare_for_warm_reboot(struct CSM* csm, char* buf, size_t max_buf_size);
+extern int mlacp_prepare_for_warm_reboot(struct CSM *csm, char *buf, size_t max_buf_size);
 void mlacp_sync_send_warmboot_flag()
 {
-    struct System* sys = NULL;
-    struct CSM* csm = NULL;
+    struct System *sys = NULL;
+    struct CSM *csm = NULL;
     int msg_len = 0;
 
     if ((sys = system_get_instance()) == NULL)
@@ -358,7 +354,7 @@ void mlacp_sync_send_warmboot_flag()
     return;
 }
 
-int iccp_receive_signal_handler(struct System* sys)
+int iccp_receive_signal_handler(struct System *sys)
 {
     char ctrl_byte;
     int err = 0;
@@ -373,7 +369,7 @@ int iccp_receive_signal_handler(struct System* sys)
     switch (ctrl_byte)
     {
         case 'w':
-            /*send packet to peer*/
+            /* send packet to peer */
             mlacp_sync_send_warmboot_flag();
             sys->warmboot_exit = WARM_REBOOT;
             break;
@@ -388,7 +384,7 @@ int iccp_receive_signal_handler(struct System* sys)
 /* Thread fetch to call */
 void scheduler_loop()
 {
-    struct System* sys = NULL;
+    struct System *sys = NULL;
 
     if ((sys = system_get_instance()) == NULL)
         return;
@@ -400,9 +396,9 @@ void scheduler_loop()
             iccp_connect_syncd();
         }
 
-        /*handle socket slelect event ,If no message received, it will block 0.1s*/
+        /* handle socket slelect event ,If no message received, it will block 0.1s */
         iccp_handle_events(sys);
-        /*csm, app state machine transit */
+        /* csm, app state machine transit */
         scheduler_transit_fsm();
 
         if (sys->warmboot_exit == WARM_REBOOT)
@@ -421,9 +417,9 @@ void scheduler_loop()
 * ***************************************/
 int mlacp_sync_with_kernel_callback()
 {
-    struct System* sys = NULL;
-    struct CSM* csm = NULL;
-    struct LocalInterface* local_if = NULL;
+    struct System *sys = NULL;
+    struct CSM *csm = NULL;
+    struct LocalInterface *local_if = NULL;
 
     if ((sys = system_get_instance()) == NULL)
     {
@@ -434,12 +430,12 @@ int mlacp_sync_with_kernel_callback()
     /* traverse all CSM */
     LIST_FOREACH(csm, &(sys->csm_list), next)
     {
-        /* Sync MLAG po state with kernel*/
+        /* Sync MLAG po state with kernel */
         LIST_FOREACH(local_if, &(MLACP(csm).lif_list), mlacp_next)
         {
             if (local_if->type == IF_T_PORT_CHANNEL)
             {
-                /* sync system info from one port-channel device*/
+                /* sync system info from one port-channel device */
                 if (memcmp(MLACP(csm).system_id, local_if->mac_addr, ETHER_ADDR_LEN) != 0)
                 {
                     memcpy(MLACP(csm).system_id, local_if->mac_addr, ETHER_ADDR_LEN);
@@ -457,7 +453,7 @@ out:
 /* Scheduler start while loop */
 void scheduler_start()
 {
-    /*mlacp_sync_with_kernel_callback();*/
+    /* mlacp_sync_with_kernel_callback(); */
 
     scheduler_loop();
 
@@ -467,7 +463,7 @@ void scheduler_start()
 /* Scheduler tear down */
 void scheduler_finalize()
 {
-    struct System* sys = NULL;
+    struct System *sys = NULL;
 
     if ((sys = system_get_instance()) == NULL)
         return;
@@ -483,7 +479,7 @@ void scheduler_finalize()
 
 void session_client_conn_handler(struct CSM *csm)
 {
-    struct System* sys = NULL;
+    struct System *sys = NULL;
     struct sockaddr_in peer_addr;
     int connFd = -1, connStat = -1;
     struct timeval con_tv;
@@ -496,14 +492,14 @@ void session_client_conn_handler(struct CSM *csm)
     src_addr.sin_port = 0;
     src_addr.sin_addr.s_addr = inet_addr(csm->sender_ip);
 
-    /* Lock the thread*/
+    /* Lock the thread */
     session_conn_thread_lock(&csm->conn_mutex);
 
     sys = system_get_instance();
     if (!sys)
         goto conn_fail;
 
-    /* Create sock*/
+    /* Create sock */
     connFd = socket(PF_INET, SOCK_STREAM, 0);
     bzero(&peer_addr, sizeof(peer_addr));
     peer_addr.sin_family = PF_INET;
@@ -511,12 +507,11 @@ void session_client_conn_handler(struct CSM *csm)
     peer_addr.sin_addr.s_addr = inet_addr(csm->peer_ip);
     if (connFd == -1)
     {
-        ICCPD_LOG_DEBUG(__FUNCTION__, "Peer IP:%s Socket FD creation failed.",
-                        csm->peer_ip);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Peer IP:%s Socket FD creation failed.", csm->peer_ip);
         goto conn_fail;
     }
 
-    /* Set connect timeout secs*/
+    /* Set connect timeout secs */
     con_tv.tv_sec = 0;
     con_tv.tv_usec = CONNECT_TIMEOUT_MSEC * 1000;
     if (setsockopt(connFd, SOL_SOCKET, SO_SNDTIMEO, &con_tv, len) == -1)
@@ -524,27 +519,26 @@ void session_client_conn_handler(struct CSM *csm)
         ICCPD_LOG_INFO(__FUNCTION__, "Set socket timeout fail");
     }
 
-    err = bind(connFd, (struct sockaddr*)&(src_addr), sizeof(src_addr));
+    err = bind(connFd, (struct sockaddr *)&(src_addr), sizeof(src_addr));
     if (err < 0)
     {
-        ICCPD_LOG_INFO(__FUNCTION__, "Bind socket failed. Error = %d errno = %d ",err,errno);
+        ICCPD_LOG_INFO(__FUNCTION__, "Bind socket failed. Error = %d errno = %d ", err, errno);
         goto conn_fail;
     }
 
-    /* Try conn*/
+    /* Try conn */
     ICCPD_LOG_INFO(__FUNCTION__, "Connecting. peer ip = [%s], %p", csm->peer_ip, csm);
-    connStat = connect(connFd, (struct sockaddr*)&(peer_addr), sizeof(peer_addr));
-    ICCPD_LOG_INFO(__FUNCTION__, "Connection. fd = [%d], status = [%d], %p",
-                   connFd, connStat, csm);
+    connStat = connect(connFd, (struct sockaddr *)&(peer_addr), sizeof(peer_addr));
+    ICCPD_LOG_INFO(__FUNCTION__, "Connection. fd = [%d], status = [%d], %p", connFd, connStat, csm);
 
     if (connStat != 0)
     {
-        /* Conn Fail*/
+        /* Conn Fail */
         goto conn_fail;
     }
     else
     {
-        /* Conn OK*/
+        /* Conn OK */
         struct epoll_event event;
         int err;
         event.data.fd = connFd;
@@ -572,25 +566,25 @@ conn_ok:
 }
 
 /* Create socket connect to peer */
-int scheduler_prepare_session(struct CSM* csm)
+int scheduler_prepare_session(struct CSM *csm)
 {
     int ret = MCLAG_ERROR;
     uint32_t local_ip = 0;
     uint32_t peer_ip = 0;
 
-    /* Init time_t*/
+    /* Init time_t */
     if (csm->connTimePrev == 0)
     {
         time(&csm->connTimePrev);
     }
 
-    /* Don't conn to svr continously*/
+    /* Don't conn to svr continously */
     if ((time(NULL) - csm->connTimePrev) < CONNECT_INTERVAL_SEC)
     {
         goto no_time_update;
     }
 
-    /* Already conn?*/
+    /* Already conn? */
     if (csm->sock_fd > 0)
     {
         goto time_update;
@@ -599,7 +593,7 @@ int scheduler_prepare_session(struct CSM* csm)
     if ((ret = scheduler_check_csm_config(csm)) < 0)
         goto time_update;
 
-    /* Who is client*/
+    /* Who is client */
     local_ip = inet_addr(csm->sender_ip);
     peer_ip = inet_addr(csm->peer_ip);
     if (local_ip > peer_ip)
@@ -608,9 +602,7 @@ int scheduler_prepare_session(struct CSM* csm)
     }
     else if (local_ip == peer_ip)
     {
-        ICCPD_LOG_WARN("connect",
-                       "Sender IP is as the same as the peer IP. "
-                       "This must be fixed before connection is built.");
+        ICCPD_LOG_WARN("connect", "Sender IP is as the same as the peer IP. " "This must be fixed before connection is built.");
         goto time_update;
     }
 
@@ -632,7 +624,7 @@ no_time_update:
 void scheduler_server_sock_init()
 {
     int optval = 1;
-    struct System* sys = NULL;
+    struct System *sys = NULL;
     struct sockaddr_in src_addr;
 
     if ((sys = system_get_instance()) == NULL)
@@ -653,10 +645,10 @@ void scheduler_server_sock_init()
     if (setsockopt(sys->server_fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1)
     {
         ICCPD_LOG_INFO(__FUNCTION__, "Set socket option failed. Error");
-        /*return;*/
+        /* return; */
     }
 
-    if (bind(sys->server_fd, (struct sockaddr*)&(src_addr), sizeof(src_addr)) < 0)
+    if (bind(sys->server_fd, (struct sockaddr *)&(src_addr), sizeof(src_addr)) < 0)
     {
         ICCPD_LOG_INFO(__FUNCTION__, "Bind socket failed. Error");
         return;
@@ -675,7 +667,7 @@ void scheduler_server_sock_init()
 
 int iccp_get_server_sock_fd()
 {
-    struct System* sys = NULL;
+    struct System *sys = NULL;
 
     if ((sys = system_get_instance()) == NULL)
         return 0;
@@ -684,16 +676,16 @@ int iccp_get_server_sock_fd()
 }
 
 /* Server socket initialization */
-int scheduler_check_csm_config(struct CSM* csm)
+int scheduler_check_csm_config(struct CSM *csm)
 {
     int ret = 1;
-    struct LocalInterface* lif = NULL;
-    struct System* sys = NULL;
+    struct LocalInterface *lif = NULL;
+    struct System *sys = NULL;
 
     if ((sys = system_get_instance()) == NULL)
         return MCLAG_ERROR;
 
-    if (csm == NULL )
+    if (csm == NULL)
         return MCLAG_ERROR;
 
     if (csm->mlag_id <= 0)
@@ -707,7 +699,7 @@ int scheduler_check_csm_config(struct CSM* csm)
         lif = local_if_find_by_name(csm->peer_itf_name);
         if (lif == NULL)
         {
-            /*if peer-link is configured but the interface is not created, peer connection can not establish*/
+            /* if peer-link is configured but the interface is not created, peer connection can not establish */
             return MCLAG_ERROR;
         }
         else
@@ -720,20 +712,20 @@ int scheduler_check_csm_config(struct CSM* csm)
     if (ret == MCLAG_ERROR)
         ICCPD_LOG_INFO(__FUNCTION__, "mclag config is not complete or conflicting, please check!");
 
-    /* Decide STP role*/
+    /* Decide STP role */
     iccp_csm_stp_role_count(csm);
 
     return ret;
 }
 
-int scheduler_unregister_sock_read_event_callback(struct CSM* csm)
+int scheduler_unregister_sock_read_event_callback(struct CSM *csm)
 {
-    struct System* sys = NULL;
+    struct System *sys = NULL;
 
-    if ((sys = system_get_instance()) == NULL )
+    if ((sys = system_get_instance()) == NULL)
         return MCLAG_ERROR;
 
-    if (csm == NULL )
+    if (csm == NULL)
     {
         return MCLAG_ERROR;
     }
@@ -743,11 +735,11 @@ int scheduler_unregister_sock_read_event_callback(struct CSM* csm)
     return 0;
 }
 
-void scheduler_session_disconnect_handler(struct CSM* csm)
+void scheduler_session_disconnect_handler(struct CSM *csm)
 {
-    struct System* sys = NULL;
+    struct System *sys = NULL;
 
-    if ((sys = system_get_instance()) == NULL )
+    if ((sys = system_get_instance()) == NULL)
         return;
 
     struct epoll_event event;

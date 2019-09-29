@@ -25,7 +25,6 @@
 #ifndef _ICCP_CONSISTENCY_CHECK_H
 #define _ICCP_CONSISTENCY_CHECK_H
 
-
 enum Reason_ID
 {
     REASON_NONE = 0,
@@ -37,7 +36,6 @@ enum Reason_ID
 
 extern const char *reasons[];
 
-enum Reason_ID iccp_consistency_check(char* ifname);
-
+enum Reason_ID iccp_consistency_check(char *ifname);
 
 #endif

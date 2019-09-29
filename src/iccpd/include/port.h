@@ -66,7 +66,7 @@ struct VLAN_ID
 {
     uint16_t vid;
     uint16_t vlan_removed;
-    struct LocalInterface* vlan_itf; /* loacl vlan interface */
+    struct LocalInterface *vlan_itf;    /* loacl vlan interface */
     LIST_ENTRY(VLAN_ID) port_next;
 };
 
@@ -85,7 +85,7 @@ struct PeerInterface
     int po_id;
     uint8_t po_active;
 
-    struct CSM* csm;
+    struct CSM *csm;
 
     LIST_ENTRY(PeerInterface) mlacp_next;
     LIST_HEAD(peer_vlan_list, VLAN_ID) vlan_list;
@@ -110,12 +110,12 @@ struct LocalInterface
     uint8_t is_peer_link;
     char portchannel_member_buf[512];
     uint8_t is_arp_accept;
-    int po_id;          /* Port Channel ID */
-    uint8_t po_active;  /* Port Channel is in active status? */
-    int mlacp_state;    /* Record mlacp state */
+    int po_id;                  /* Port Channel ID */
+    uint8_t po_active;          /* Port Channel is in active status? */
+    int mlacp_state;            /* Record mlacp state */
     uint8_t isolate_to_peer_link;
 
-    struct CSM* csm;
+    struct CSM *csm;
 
     uint8_t changed;
     uint8_t port_config_sync;
@@ -128,33 +128,33 @@ struct LocalInterface
     LIST_ENTRY(LocalInterface) mlacp_purge_next;
 };
 
-struct LocalInterface* local_if_create(int ifindex, char* ifname, int type);
-struct LocalInterface* local_if_find_by_name(const char* ifname);
-struct LocalInterface* local_if_find_by_ifindex(int ifindex);
-struct LocalInterface* local_if_find_by_po_id(int po_id);
+struct LocalInterface *local_if_create(int ifindex, char *ifname, int type);
+struct LocalInterface *local_if_find_by_name(const char *ifname);
+struct LocalInterface *local_if_find_by_ifindex(int ifindex);
+struct LocalInterface *local_if_find_by_po_id(int po_id);
 
 void local_if_destroy(char *ifname);
 void local_if_change_flag_clear(void);
 void local_if_purge_clear(void);
-int local_if_is_l3_mode(struct LocalInterface* local_if);
+int local_if_is_l3_mode(struct LocalInterface *local_if);
 
-void local_if_init(struct LocalInterface*);
-void local_if_finalize(struct LocalInterface*);
+void local_if_init(struct LocalInterface *);
+void local_if_finalize(struct LocalInterface *);
 
-void ether_mac_set_addr_with_if_name(char* name, uint8_t* mac);
+void ether_mac_set_addr_with_if_name(char *name, uint8_t *mac);
 
-struct PeerInterface* peer_if_create(struct CSM* csm, int peer_if_number, int type);
-struct PeerInterface* peer_if_find_by_name(struct CSM* csm, char* name);
+struct PeerInterface *peer_if_create(struct CSM *csm, int peer_if_number, int type);
+struct PeerInterface *peer_if_find_by_name(struct CSM *csm, char *name);
 
-void peer_if_destroy(struct PeerInterface* pif);
-int peer_if_add_vlan(struct PeerInterface* peer_if, uint16_t vlan_id);
-int peer_if_clean_unused_vlan(struct PeerInterface* peer_if);
+void peer_if_destroy(struct PeerInterface *pif);
+int peer_if_add_vlan(struct PeerInterface *peer_if, uint16_t vlan_id);
+int peer_if_clean_unused_vlan(struct PeerInterface *peer_if);
 /* VLAN manipulation */
-int local_if_add_vlan(struct LocalInterface* local_if, uint16_t vid);
-void local_if_del_vlan(struct LocalInterface* local_if, uint16_t vid);
-void local_if_del_all_vlan(struct LocalInterface* lif);
+int local_if_add_vlan(struct LocalInterface *local_if, uint16_t vid);
+void local_if_del_vlan(struct LocalInterface *local_if, uint16_t vid);
+void local_if_del_all_vlan(struct LocalInterface *lif);
 
 /* ARP manipulation */
-int set_sys_arp_accept_flag(char* ifname, int flag);
+int set_sys_arp_accept_flag(char *ifname, int flag);
 
-#endif /* PORT_H_ */
+#endif                          /* PORT_H_ */

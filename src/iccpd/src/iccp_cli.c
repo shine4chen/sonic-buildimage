@@ -32,27 +32,26 @@
 /*
  * 'id <1-65535>' command
  */
-int set_mc_lag_id( struct CSM *csm, uint16_t id)
+int set_mc_lag_id(struct CSM *csm, uint16_t id)
 {
     if (!csm)
         return MCLAG_ERROR;
 
     ICCPD_LOG_INFO(__FUNCTION__, "Set mlag-id : %d", id);
 
-    /* Mlag-ID, RG-ID, MLACP-ID
-       Temporary let the three id be the same*/
+    /* Mlag-ID, RG-ID, MLACP-ID Temporary let the three id be the same */
     csm->mlag_id = id;
     csm->iccp_info.icc_rg_id = id;
     csm->app_csm.mlacp.id = id;
     return 0;
 }
 
-int unset_mc_lag_id( struct CSM *csm, uint16_t id)
+int unset_mc_lag_id(struct CSM *csm, uint16_t id)
 {
     if (!csm)
         return MCLAG_ERROR;
 
-    /* Mlag-ID, RG-ID, MLACP-ID*/
+    /* Mlag-ID, RG-ID, MLACP-ID */
     csm->mlag_id = 0;
     csm->iccp_info.icc_rg_id = 0;
     csm->app_csm.mlacp.id = 0;
@@ -65,9 +64,9 @@ int unset_mc_lag_id( struct CSM *csm, uint16_t id)
 /*
  * 'peer-link WORD' command
  */
-int set_peer_link(int mid, const char* ifname)
+int set_peer_link(int mid, const char *ifname)
 {
-    struct CSM* csm = NULL;
+    struct CSM *csm = NULL;
     struct LocalInterface *lif = NULL;
     size_t len = 0;
 
@@ -97,10 +96,9 @@ int set_peer_link(int mid, const char* ifname)
         }
         else
         {
-            ICCPD_LOG_INFO(__FUNCTION__, "Change peer-link : %s -> %s",
-                           csm->peer_itf_name, ifname);
+            ICCPD_LOG_INFO(__FUNCTION__, "Change peer-link : %s -> %s", csm->peer_itf_name, ifname);
 
-            /*disconnect the link for mac and arp sync up before change peer_itf_name*/
+            /* disconnect the link for mac and arp sync up before change peer_itf_name */
             scheduler_session_disconnect_handler(csm);
 
             if (csm->peer_link_if)
@@ -112,18 +110,17 @@ int set_peer_link(int mid, const char* ifname)
     }
     else
     {
-        ICCPD_LOG_INFO(__FUNCTION__, "Set mlag %d peer-link : %s",
-                       csm->mlag_id, ifname);
+        ICCPD_LOG_INFO(__FUNCTION__, "Set mlag %d peer-link : %s", csm->mlag_id, ifname);
     }
 
     memset(csm->peer_itf_name, 0, IFNAMSIZ);
     memcpy(csm->peer_itf_name, ifname, len);
 
-    /* update peer-link link handler*/
+    /* update peer-link link handler */
     lif = local_if_find_by_name(csm->peer_itf_name);
     if (lif)
     {
-        /*When set peer-link, the local-if is already created*/
+        /* When set peer-link, the local-if is already created */
         csm->peer_link_if = lif;
         lif->is_peer_link = 1;
         MLACP(csm).system_config_changed = 1;
@@ -132,7 +129,7 @@ int set_peer_link(int mid, const char* ifname)
             iccp_get_port_member_list(lif);
     }
 
-    /*disconnect the link for mac and arp sync up*/
+    /* disconnect the link for mac and arp sync up */
     scheduler_session_disconnect_handler(csm);
 
     return 0;
@@ -140,7 +137,7 @@ int set_peer_link(int mid, const char* ifname)
 
 int unset_peer_link(int mid)
 {
-    struct CSM* csm = NULL;
+    struct CSM *csm = NULL;
 
     csm = system_get_csm_by_mlacp_id(mid);
     if (csm == NULL)
@@ -148,15 +145,15 @@ int unset_peer_link(int mid)
 
     if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
     {
-        /*must be enabled mac learn*/
+        /* must be enabled mac learn */
         if (csm->peer_link_if)
             set_peerlink_mlag_port_learn(csm->peer_link_if, 1);
     }
 
-    /* update peer-link link handler*/
+    /* update peer-link link handler */
     scheduler_session_disconnect_handler(csm);
 
-    /* clean peer-link*/
+    /* clean peer-link */
     memset(csm->peer_itf_name, 0, IFNAMSIZ);
     if (csm->peer_link_if)
     {
@@ -171,9 +168,9 @@ int unset_peer_link(int mid)
 /*
  * 'local ip address A.B.C.D' command
  */
-int set_local_address(int mid, const char* addr)
+int set_local_address(int mid, const char *addr)
 {
-    struct CSM* csm = NULL;
+    struct CSM *csm = NULL;
     size_t len = 0;
 
     csm = system_get_csm_by_mlacp_id(mid);
@@ -191,8 +188,7 @@ int set_local_address(int mid, const char* addr)
         }
         else
         {
-            ICCPD_LOG_INFO(__FUNCTION__, "Change local-address : %s -> %s",
-                           csm->sender_ip, addr);
+            ICCPD_LOG_INFO(__FUNCTION__, "Change local-address : %s -> %s", csm->sender_ip, addr);
             scheduler_session_disconnect_handler(csm);
         }
     }
@@ -212,7 +208,7 @@ int set_local_address(int mid, const char* addr)
 
 int unset_local_address(int mid)
 {
-    struct CSM* csm = NULL;
+    struct CSM *csm = NULL;
 
     csm = system_get_csm_by_mlacp_id(mid);
     if (csm == NULL)
@@ -221,7 +217,7 @@ int unset_local_address(int mid)
     memset(csm->sender_ip, 0, INET_ADDRSTRLEN);
     memset(csm->iccp_info.sender_name, 0, INET_ADDRSTRLEN);
 
-    /* reset link*/
+    /* reset link */
     scheduler_session_disconnect_handler(csm);
 
     return 0;
@@ -230,9 +226,9 @@ int unset_local_address(int mid)
 /*
  * 'peer-address A.B.C.D' command
  */
-int set_peer_address(int mid, const char* addr)
+int set_peer_address(int mid, const char *addr)
 {
-    struct CSM* csm = NULL;
+    struct CSM *csm = NULL;
     size_t len = 0;
 
     csm = system_get_csm_by_mlacp_id(mid);
@@ -252,8 +248,7 @@ int set_peer_address(int mid, const char* addr)
         }
         else
         {
-            ICCPD_LOG_INFO(__FUNCTION__, "Change peer-address : %s -> %s",
-                           csm->peer_ip, addr);
+            ICCPD_LOG_INFO(__FUNCTION__, "Change peer-address : %s -> %s", csm->peer_ip, addr);
             scheduler_session_disconnect_handler(csm);
         }
     }
@@ -270,7 +265,7 @@ int set_peer_address(int mid, const char* addr)
 
 int unset_peer_address(int mid)
 {
-    struct CSM* csm = NULL;
+    struct CSM *csm = NULL;
 
     csm = system_get_csm_by_mlacp_id(mid);
     if (csm == NULL)
@@ -278,25 +273,24 @@ int unset_peer_address(int mid)
 
     memset(csm->peer_ip, 0, INET_ADDRSTRLEN);
 
-    /* reset link*/
+    /* reset link */
     scheduler_session_disconnect_handler(csm);
 
     return 0;
 }
 
-int iccp_cli_attach_mclag_domain_to_port_channel( int domain, const char* ifname)
+int iccp_cli_attach_mclag_domain_to_port_channel(int domain, const char *ifname)
 {
-    struct CSM* csm = NULL;
+    struct CSM *csm = NULL;
     struct LocalInterface *lif = NULL;
-    struct If_info * cif = NULL;
+    struct If_info *cif = NULL;
 
     if (!ifname)
         return MCLAG_ERROR;
 
     if (strncmp(ifname, PORTCHANNEL_PREFIX, strlen(PORTCHANNEL_PREFIX)) != 0)
     {
-        ICCPD_LOG_DEBUG(__FUNCTION__,
-                        "attach interface(%s) is not a port-channel", ifname);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "attach interface(%s) is not a port-channel", ifname);
         return MCLAG_ERROR;
     }
 
@@ -332,40 +326,35 @@ int iccp_cli_attach_mclag_domain_to_port_channel( int domain, const char* ifname
     return 0;
 }
 
-int iccp_cli_detach_mclag_domain_to_port_channel( const char* ifname)
+int iccp_cli_detach_mclag_domain_to_port_channel(const char *ifname)
 {
     int unbind_poid = -1;
     struct CSM *csm = NULL;
     struct LocalInterface *lif_po = NULL;
     struct LocalInterface *lif = NULL;
-    struct If_info * cif = NULL;
+    struct If_info *cif = NULL;
 
     if (!ifname)
         return MCLAG_ERROR;
 
     if (strncmp(ifname, PORTCHANNEL_PREFIX, strlen(PORTCHANNEL_PREFIX)) != 0)
     {
-        ICCPD_LOG_DEBUG(__FUNCTION__,
-                        "detach interface(%s) is not a port-channel",  ifname);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "detach interface(%s) is not a port-channel", ifname);
         return MCLAG_ERROR;
     }
 
-    /* find po*/
-    if (!(lif_po = local_if_find_by_name(ifname))
-        || lif_po->type != IF_T_PORT_CHANNEL
-        || lif_po->po_id <= 0
-        || lif_po->csm == NULL)
+    /* find po */
+    if (!(lif_po = local_if_find_by_name(ifname)) || lif_po->type != IF_T_PORT_CHANNEL || lif_po->po_id <= 0 || lif_po->csm == NULL)
     {
         return MCLAG_ERROR;
     }
 
-    /* find csm*/
+    /* find csm */
     csm = lif_po->csm;
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "detach mclag id = %d from ifname = %s",
-                    csm->mlag_id, lif_po->name);
+    ICCPD_LOG_DEBUG(__FUNCTION__, "detach mclag id = %d from ifname = %s", csm->mlag_id, lif_po->name);
 
-    /* process link state handler before detaching it.*/
+    /* process link state handler before detaching it. */
     mlacp_mlag_link_del_handler(csm, lif_po);
 
     unbind_poid = lif_po->po_id;
@@ -387,7 +376,7 @@ int iccp_cli_detach_mclag_domain_to_port_channel( const char* ifname)
 /* This function parses a string to a binary mac address (uint8_t[6])
     The string should contain mac address only. No spaces are allowed.
     The mac address separators could be either ':' or '-'*/
-int parseMacString(const char * str_mac, uint8_t* bin_mac)
+int parseMacString(const char *str_mac, uint8_t *bin_mac)
 {
     int i;
 
@@ -396,23 +385,19 @@ int parseMacString(const char * str_mac, uint8_t* bin_mac)
         return MCLAG_ERROR;
     }
 
-    /* 6 hexadecimal numbers (two digits each) + 5 delimiters*/
+    /* 6 hexadecimal numbers (two digits each) + 5 delimiters */
     if (strlen(str_mac) != ETHER_ADDR_LEN * 2 + 5)
     {
         return MCLAG_ERROR;
     }
 
-    /* first check that all mac address separators are equal to each other
-        2, 5, 8, 11, and 14 are MAC address separator positions*/
-    if (!(str_mac[2]  == str_mac[5]
-          && str_mac[5]  == str_mac[8]
-          && str_mac[8]  == str_mac[11]
-          && str_mac[11] == str_mac[14]))
+    /* first check that all mac address separators are equal to each other 2, 5, 8, 11, and 14 are MAC address separator positions */
+    if (!(str_mac[2] == str_mac[5] && str_mac[5] == str_mac[8] && str_mac[8] == str_mac[11] && str_mac[11] == str_mac[14]))
     {
         return MCLAG_ERROR;
     }
 
-    /* then check that the first separator is equal to ':' or '-'*/
+    /* then check that the first separator is equal to ':' or '-' */
     if (str_mac[2] != ':' && str_mac[2] != '-')
     {
         return MCLAG_ERROR;
@@ -420,8 +405,8 @@ int parseMacString(const char * str_mac, uint8_t* bin_mac)
 
     for (i = 0; i < ETHER_ADDR_LEN; ++i)
     {
-        int left = i * 3;       /* left  digit position of hexadecimal number*/
-        int right = left + 1;   /* right digit position of hexadecimal number*/
+        int left = i * 3;       /* left digit position of hexadecimal number */
+        int right = left + 1;   /* right digit position of hexadecimal number */
 
         if (str_mac[left] >= '0' && str_mac[left] <= '9')
         {
@@ -463,12 +448,12 @@ int parseMacString(const char * str_mac, uint8_t* bin_mac)
     return 0;
 }
 
-int set_local_system_id(const char* mac)
+int set_local_system_id(const char *mac)
 {
-    struct System* sys = NULL;
-    struct CSM* csm = NULL;
+    struct System *sys = NULL;
+    struct CSM *csm = NULL;
 
-    if ((sys = system_get_instance()) == NULL )
+    if ((sys = system_get_instance()) == NULL)
         return 0;
 
     LIST_FOREACH(csm, &(sys->csm_list), next)
@@ -483,13 +468,13 @@ int set_local_system_id(const char* mac)
     return 0;
 }
 
-int unset_local_system_id( )
+int unset_local_system_id()
 {
     uint8_t null_mac[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    struct System* sys = NULL;
-    struct CSM* csm = NULL;
+    struct System *sys = NULL;
+    struct CSM *csm = NULL;
 
-    if ((sys = system_get_instance()) == NULL )
+    if ((sys = system_get_instance()) == NULL)
         return 0;
 
     LIST_FOREACH(csm, &(sys->csm_list), next)
@@ -499,4 +484,3 @@ int unset_local_system_id( )
 
     return 0;
 }
-

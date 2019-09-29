@@ -42,18 +42,18 @@ struct CSM;
 #define TRANSIT_INTERVAL_SEC       1
 #define EPOLL_TIMEOUT_MSEC          100
 
-int scheduler_prepare_session(struct CSM*);
-int scheduler_check_csm_config(struct CSM*);
-int scheduler_unregister_sock_read_event_callback(struct CSM*);
-void scheduler_session_disconnect_handler(struct CSM*);
+int scheduler_prepare_session(struct CSM *);
+int scheduler_check_csm_config(struct CSM *);
+int scheduler_unregister_sock_read_event_callback(struct CSM *);
+void scheduler_session_disconnect_handler(struct CSM *);
 void scheduler_init();
 void scheduler_finalize();
 void scheduler_loop();
 void scheduler_start();
 void scheduler_server_sock_init();
-int scheduler_csm_read_callback(struct CSM* csm);
+int scheduler_csm_read_callback(struct CSM *csm);
 int iccp_get_server_sock_fd();
 int scheduler_server_accept();
-int iccp_receive_signal_handler(struct System* sys);
+int iccp_receive_signal_handler(struct System *sys);
 
-#endif /* SCHEDULER_H_ */
+#endif                          /* SCHEDULER_H_ */

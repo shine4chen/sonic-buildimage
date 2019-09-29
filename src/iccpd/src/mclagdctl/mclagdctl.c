@@ -42,67 +42,66 @@ char *mclagdctl_sock_path = "/var/run/iccpd/mclagdctl.sock";
    mclagdctl -i dump portlist peer
  */
 
-static struct command_type command_types[] =
-{
+static struct command_type command_types[] = {
     {
-        .id = ID_CMDTYPE_D,
-        .name = "dump",
-        .enca_msg = NULL,
-        .parse_msg = NULL,
-    },
+     .id = ID_CMDTYPE_D,
+     .name = "dump",
+     .enca_msg = NULL,
+     .parse_msg = NULL,
+     },
     {
-        .id = ID_CMDTYPE_D_S,
-        .parent_id = ID_CMDTYPE_D,
-        .info_type = INFO_TYPE_DUMP_STATE,
-        .name = "state",
-        .enca_msg = mclagdctl_enca_dump_state,
-        .parse_msg = mclagdctl_parse_dump_state,
-    },
+     .id = ID_CMDTYPE_D_S,
+     .parent_id = ID_CMDTYPE_D,
+     .info_type = INFO_TYPE_DUMP_STATE,
+     .name = "state",
+     .enca_msg = mclagdctl_enca_dump_state,
+     .parse_msg = mclagdctl_parse_dump_state,
+     },
     {
-        .id = ID_CMDTYPE_D_A,
-        .parent_id = ID_CMDTYPE_D,
-        .info_type = INFO_TYPE_DUMP_ARP,
-        .name = "arp",
-        .enca_msg = mclagdctl_enca_dump_arp,
-        .parse_msg = mclagdctl_parse_dump_arp,
-    },
+     .id = ID_CMDTYPE_D_A,
+     .parent_id = ID_CMDTYPE_D,
+     .info_type = INFO_TYPE_DUMP_ARP,
+     .name = "arp",
+     .enca_msg = mclagdctl_enca_dump_arp,
+     .parse_msg = mclagdctl_parse_dump_arp,
+     },
     {
-        .id = ID_CMDTYPE_D_A,
-        .parent_id = ID_CMDTYPE_D,
-        .info_type = INFO_TYPE_DUMP_NDISC,
-        .name = "nd",
-        .enca_msg = mclagdctl_enca_dump_ndisc,
-        .parse_msg = mclagdctl_parse_dump_ndisc,
-    },
+     .id = ID_CMDTYPE_D_A,
+     .parent_id = ID_CMDTYPE_D,
+     .info_type = INFO_TYPE_DUMP_NDISC,
+     .name = "nd",
+     .enca_msg = mclagdctl_enca_dump_ndisc,
+     .parse_msg = mclagdctl_parse_dump_ndisc,
+     },
     {
-        .id = ID_CMDTYPE_D_A,
-        .parent_id = ID_CMDTYPE_D,
-        .info_type = INFO_TYPE_DUMP_MAC,
-        .name = "mac",
-        .enca_msg = mclagdctl_enca_dump_mac,
-        .parse_msg = mclagdctl_parse_dump_mac,
-    },
+     .id = ID_CMDTYPE_D_A,
+     .parent_id = ID_CMDTYPE_D,
+     .info_type = INFO_TYPE_DUMP_MAC,
+     .name = "mac",
+     .enca_msg = mclagdctl_enca_dump_mac,
+     .parse_msg = mclagdctl_parse_dump_mac,
+     },
     {
-        .id = ID_CMDTYPE_D_P,
-        .parent_id = ID_CMDTYPE_D,
-        .name = "portlist",
-    },
+     .id = ID_CMDTYPE_D_P,
+     .parent_id = ID_CMDTYPE_D,
+     .name = "portlist",
+     },
     {
-        .id = ID_CMDTYPE_D_P_L,
-        .parent_id = ID_CMDTYPE_D_P,
-        .info_type = INFO_TYPE_DUMP_LOCAL_PORTLIST,
-        .name = "local",
-        .enca_msg = mclagdctl_enca_dump_local_portlist,
-        .parse_msg = mclagdctl_parse_dump_local_portlist,
-    },
+     .id = ID_CMDTYPE_D_P_L,
+     .parent_id = ID_CMDTYPE_D_P,
+     .info_type = INFO_TYPE_DUMP_LOCAL_PORTLIST,
+     .name = "local",
+     .enca_msg = mclagdctl_enca_dump_local_portlist,
+     .parse_msg = mclagdctl_parse_dump_local_portlist,
+     },
     {
-        .id = ID_CMDTYPE_D_P_P,
-        .parent_id = ID_CMDTYPE_D_P,
-        .info_type = INFO_TYPE_DUMP_PEER_PORTLIST,
-        .name = "peer",
-        .enca_msg = mclagdctl_enca_dump_peer_portlist,
-        .parse_msg = mclagdctl_parse_dump_peer_portlist,
-    },
+     .id = ID_CMDTYPE_D_P_P,
+     .parent_id = ID_CMDTYPE_D_P,
+     .info_type = INFO_TYPE_DUMP_PEER_PORTLIST,
+     .name = "peer",
+     .enca_msg = mclagdctl_enca_dump_peer_portlist,
+     .parse_msg = mclagdctl_parse_dump_peer_portlist,
+     },
 };
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
@@ -132,7 +131,7 @@ int mclagdctl_sock_connect()
     snprintf(addr.sun_path, sizeof(addr.sun_path) - 1, "%s", mclagdctl_sock_path);
     addrlen = sizeof(addr.sun_family) + strlen(mclagdctl_sock_path);
 
-    if ((ret = connect(mclagdctl_sock_fd, (struct sockaddr*)&addr, addrlen)) < 0)
+    if ((ret = connect(mclagdctl_sock_fd, (struct sockaddr *)&addr, addrlen)) < 0)
     {
         close(mclagdctl_sock_fd);
         mclagdctl_sock_fd = -1;
@@ -187,7 +186,7 @@ int mclagdctl_sock_read(int fd, unsigned char *r_buf, int total_len)
 
         switch ((ret = select(fd + 1, &read_fd, NULL, NULL, &tv)))
         {
-            case -1:    // error
+            case -1:   // error
                 fprintf(stdout, "Mclagdctl:Select return error:%s\n", strerror(errno));
                 return MCLAG_ERROR;
 
@@ -210,7 +209,7 @@ int mclagdctl_sock_read(int fd, unsigned char *r_buf, int total_len)
     return read_len;
 }
 
-int mclagdctl_enca_dump_state(char *msg, int mclag_id,  int argc, char **argv)
+int mclagdctl_enca_dump_state(char *msg, int mclag_id, int argc, char **argv)
 {
     struct mclagdctl_req_hdr req;
 
@@ -224,7 +223,7 @@ int mclagdctl_enca_dump_state(char *msg, int mclag_id,  int argc, char **argv)
 
 int mclagdctl_parse_dump_state(char *msg, int data_len)
 {
-    struct mclagd_state * state_info = NULL;
+    struct mclagd_state *state_info = NULL;
     int len = 0;
     int count = 0;
     int pos = 0;
@@ -233,7 +232,7 @@ int mclagdctl_parse_dump_state(char *msg, int data_len)
 
     for (; data_len >= len; data_len -= len, count++)
     {
-        state_info = (struct mclagd_state*)(msg + len * count);
+        state_info = (struct mclagd_state *)(msg + len * count);
 
         fprintf(stdout, "%s: %s\n", "The MCLAG's keepalive is", state_info->keepalive ? "OK" : "ERROR");
 
@@ -249,8 +248,7 @@ int mclagdctl_parse_dump_state(char *msg, int data_len)
         fprintf(stdout, "%s: %02x:%02x:%02x:%02x:%02x:%02x \n",
                 "Peer Link Mac",
                 state_info->peer_link_mac[0], state_info->peer_link_mac[1],
-                state_info->peer_link_mac[2], state_info->peer_link_mac[3],
-                state_info->peer_link_mac[4], state_info->peer_link_mac[5]);
+                state_info->peer_link_mac[2], state_info->peer_link_mac[3], state_info->peer_link_mac[4], state_info->peer_link_mac[5]);
 
         if (state_info->role == 0)
             fprintf(stdout, "%s: %s\n", "Role", "None");
@@ -304,7 +302,7 @@ int mclagdctl_enca_dump_ndisc(char *msg, int mclag_id, int argc, char **argv)
 
 int mclagdctl_parse_dump_arp(char *msg, int data_len)
 {
-    struct mclagd_arp_msg * arp_info = NULL;
+    struct mclagd_arp_msg *arp_info = NULL;
     int len = 0;
     int count = 0;
 
@@ -318,14 +316,13 @@ int mclagdctl_parse_dump_arp(char *msg, int data_len)
 
     for (; data_len >= len; data_len -= len, count++)
     {
-        arp_info = (struct mclagd_arp_msg*)(msg + len * count);
+        arp_info = (struct mclagd_arp_msg *)(msg + len * count);
 
         fprintf(stdout, "%-6d", count + 1);
         fprintf(stdout, "%-20s", arp_info->ipv4_addr);
         fprintf(stdout, "%02x:%02x:%02x:%02x:%02x:%02x",
                 arp_info->mac_addr[0], arp_info->mac_addr[1],
-                arp_info->mac_addr[2], arp_info->mac_addr[3],
-                arp_info->mac_addr[4], arp_info->mac_addr[5]);
+                arp_info->mac_addr[2], arp_info->mac_addr[3], arp_info->mac_addr[4], arp_info->mac_addr[5]);
         fprintf(stdout, "   ");
         fprintf(stdout, "%-20s", arp_info->ifname);
         fprintf(stdout, "\n");
@@ -336,7 +333,7 @@ int mclagdctl_parse_dump_arp(char *msg, int data_len)
 
 int mclagdctl_parse_dump_ndisc(char *msg, int data_len)
 {
-    struct mclagd_ndisc_msg * ndisc_info = NULL;
+    struct mclagd_ndisc_msg *ndisc_info = NULL;
     int len = 0;
     int count = 0;
 
@@ -350,14 +347,13 @@ int mclagdctl_parse_dump_ndisc(char *msg, int data_len)
 
     for (; data_len >= len; data_len -= len, count++)
     {
-        ndisc_info = (struct mclagd_ndisc_msg*)(msg + len * count);
+        ndisc_info = (struct mclagd_ndisc_msg *)(msg + len * count);
 
         fprintf(stdout, "%-6d", count + 1);
         fprintf(stdout, "%-52s", ndisc_info->ipv6_addr);
         fprintf(stdout, "%02x:%02x:%02x:%02x:%02x:%02x",
                 ndisc_info->mac_addr[0], ndisc_info->mac_addr[1],
-                ndisc_info->mac_addr[2], ndisc_info->mac_addr[3],
-                ndisc_info->mac_addr[4], ndisc_info->mac_addr[5]);
+                ndisc_info->mac_addr[2], ndisc_info->mac_addr[3], ndisc_info->mac_addr[4], ndisc_info->mac_addr[5]);
         fprintf(stdout, "   ");
         fprintf(stdout, "%-20s", ndisc_info->ifname);
         fprintf(stdout, "\n");
@@ -386,7 +382,7 @@ int mclagdctl_enca_dump_mac(char *msg, int mclag_id, int argc, char **argv)
 
 int mclagdctl_parse_dump_mac(char *msg, int data_len)
 {
-    struct mclagd_mac_msg * mac_info = NULL;
+    struct mclagd_mac_msg *mac_info = NULL;
     int len = 0;
     int count = 0;
 
@@ -405,7 +401,7 @@ int mclagdctl_parse_dump_mac(char *msg, int data_len)
 
     for (; data_len >= len; data_len -= len, count++)
     {
-        mac_info = (struct mclagd_mac_msg*)(msg + len * count);
+        mac_info = (struct mclagd_mac_msg *)(msg + len * count);
 
         fprintf(stdout, "%-6d", count + 1);
 
@@ -453,7 +449,7 @@ int mclagdctl_enca_dump_local_portlist(char *msg, int mclag_id, int argc, char *
 
 int mclagdctl_parse_dump_local_portlist(char *msg, int data_len)
 {
-    struct mclagd_local_if * lif_info = NULL;
+    struct mclagd_local_if *lif_info = NULL;
     int len = 0;
     int count = 0;
     int pos = 0;
@@ -462,7 +458,7 @@ int mclagdctl_parse_dump_local_portlist(char *msg, int data_len)
 
     for (; data_len >= len; data_len -= len, count++)
     {
-        lif_info = (struct mclagd_local_if*)(msg + len * count);
+        lif_info = (struct mclagd_local_if *)(msg + len * count);
 
         for (pos = 0; pos < 60; ++pos)
             fprintf(stdout, "-");
@@ -477,18 +473,16 @@ int mclagdctl_parse_dump_local_portlist(char *msg, int data_len)
             fprintf(stdout, "%s: %02x:%02x:%02x:%02x:%02x:%02x \n",
                     "MAC",
                     lif_info->mac_addr[0], lif_info->mac_addr[1],
-                    lif_info->mac_addr[2], lif_info->mac_addr[3],
-                    lif_info->mac_addr[4], lif_info->mac_addr[5]);
+                    lif_info->mac_addr[2], lif_info->mac_addr[3], lif_info->mac_addr[4], lif_info->mac_addr[5]);
 
             fprintf(stdout, "%s: %s\n", "IPv4Address", lif_info->ipv4_addr);
             fprintf(stdout, "%s: %d\n", "Prefixlen", lif_info->prefixlen);
             fprintf(stdout, "%s: %s\n", "State", lif_info->state);
             fprintf(stdout, "%s: %s\n", "IsL3Interface", lif_info->l3_mode ? "Yes" : "No");
-            /*fprintf(stdout, "%s: %s\n", "IsPeerlink", lif_info->is_peer_link ? "Yes" : "No");*/
+            /* fprintf(stdout, "%s: %s\n", "IsPeerlink", lif_info->is_peer_link ? "Yes" : "No"); */
             fprintf(stdout, "%s: %s\n", "MemberPorts", lif_info->portchannel_member_buf);
-            /*fprintf(stdout,"%s: %d\n" ,"PortchannelId", lif_info->po_id);
-               fprintf(stdout,"%s: %d\n" ,"PortchannelIsUp", lif_info->po_active);
-               fprintf(stdout,"%s: %s\n", "MlacpState", lif_info->mlacp_state);*/
+            /* fprintf(stdout,"%s: %d\n" ,"PortchannelId", lif_info->po_id); fprintf(stdout,"%s: %d\n" ,"PortchannelIsUp", lif_info->po_active);
+               fprintf(stdout,"%s: %s\n", "MlacpState", lif_info->mlacp_state); */
             fprintf(stdout, "%s: %s\n", "IsIsolateWithPeerlink", lif_info->isolate_to_peer_link ? "Yes" : "No");
             fprintf(stdout, "%s: %s\n", "VlanList", lif_info->vlanlist);
         }
@@ -498,7 +492,7 @@ int mclagdctl_parse_dump_local_portlist(char *msg, int data_len)
             fprintf(stdout, "%s: %s\n", "Type", lif_info->type);
             fprintf(stdout, "%s: %s\n", "PortName", lif_info->name);
             fprintf(stdout, "%s: %s\n", "State", lif_info->state);
-            /*fprintf(stdout,"%s: %d\n" ,"PortchannelId", lif_info->po_id);*/
+            /* fprintf(stdout,"%s: %d\n" ,"PortchannelId", lif_info->po_id); */
         }
 
         for (pos = 0; pos < 60; ++pos)
@@ -510,7 +504,7 @@ int mclagdctl_parse_dump_local_portlist(char *msg, int data_len)
     return 0;
 }
 
-int mclagdctl_enca_dump_peer_portlist(char *msg, int mclag_id,  int argc, char **argv)
+int mclagdctl_enca_dump_peer_portlist(char *msg, int mclag_id, int argc, char **argv)
 {
     struct mclagdctl_req_hdr req;
 
@@ -530,7 +524,7 @@ int mclagdctl_enca_dump_peer_portlist(char *msg, int mclag_id,  int argc, char *
 
 int mclagdctl_parse_dump_peer_portlist(char *msg, int data_len)
 {
-    struct mclagd_peer_if * pif_info = NULL;
+    struct mclagd_peer_if *pif_info = NULL;
     int len = 0;
     int count = 0;
     int pos = 0;
@@ -539,7 +533,7 @@ int mclagdctl_parse_dump_peer_portlist(char *msg, int data_len)
 
     for (; data_len >= len; data_len -= len, count++)
     {
-        pif_info = (struct mclagd_peer_if*)(msg + len * count);
+        pif_info = (struct mclagd_peer_if *)(msg + len * count);
 
         for (pos = 0; pos < 60; ++pos)
             fprintf(stdout, "-");
@@ -552,12 +546,10 @@ int mclagdctl_parse_dump_peer_portlist(char *msg, int data_len)
         fprintf(stdout, "%s: %02x:%02x:%02x:%02x:%02x:%02x \n",
                 "MAC",
                 pif_info->mac_addr[0], pif_info->mac_addr[1],
-                pif_info->mac_addr[2], pif_info->mac_addr[3],
-                pif_info->mac_addr[4], pif_info->mac_addr[5]);
+                pif_info->mac_addr[2], pif_info->mac_addr[3], pif_info->mac_addr[4], pif_info->mac_addr[5]);
 
         fprintf(stdout, "%s: %s\n", "State", pif_info->state);
-        /*fprintf(stdout,"%s: %d\n" ,"PortchannelId", pif_info->po_id);
-           fprintf(stdout,"%s: %d\n" ,"PortchannelIsActive", pif_info->po_active);*/
+        /* fprintf(stdout,"%s: %d\n" ,"PortchannelId", pif_info->po_id); fprintf(stdout,"%s: %d\n" ,"PortchannelIsActive", pif_info->po_active); */
 
         for (pos = 0; pos < 60; ++pos)
             fprintf(stdout, "-");
@@ -586,15 +578,13 @@ static int __mclagdctl_cmd_param_cnt(struct command_type *cmd_type)
     return i;
 }
 
-static struct command_type *__mclagdctl_get_cmd_by_parent(char *cmd_name,
-        enum id_command_type parent_id)
+static struct command_type *__mclagdctl_get_cmd_by_parent(char *cmd_name, enum id_command_type parent_id)
 {
     int i;
 
     for (i = 0; i < COMMAND_TYPE_COUNT; i++)
     {
-        if (!strncmp(command_types[i].name, cmd_name, strlen(cmd_name))
-            && command_types[i].parent_id == parent_id)
+        if (!strncmp(command_types[i].name, cmd_name, strlen(cmd_name)) && command_types[i].parent_id == parent_id)
             return &command_types[i];
     }
 
@@ -649,8 +639,7 @@ static int mclagdctl_find_cmd(struct command_type **pcmd_type, int *argc, char *
     }
 }
 
-static int mclagdctl_check_cmd_params(struct command_type *cmd_type,
-                                      int argc, char **argv)
+static int mclagdctl_check_cmd_params(struct command_type *cmd_type, int argc, char **argv)
 {
     int i = 0;
 
@@ -683,9 +672,7 @@ static void mclagdctl_print_help(const char *argv0)
     struct command_type *cmd_type;
 
     fprintf(stdout, "%s [options] command [command args]\n"
-            "    -h --help                Show this help\n"
-            "    -i --mclag-id             Specify one mclag id\n",
-            argv0);
+            "    -h --help                Show this help\n" "    -i --mclag-id             Specify one mclag id\n", argv0);
     fprintf(stdout, "Commands:\n");
 
     for (i = 0; i < COMMAND_TYPE_COUNT; i++)
@@ -708,11 +695,10 @@ int main(int argc, char **argv)
     char buf[MCLAGDCTL_CMD_SIZE] = { 0 };
     char *argv0 = argv[0];
     char *rcv_buf = NULL;
-    static const struct option long_options[] =
-    {
-        { "help",     no_argument,             NULL,        'h' },
-        { "mclag id", required_argument,       NULL,        'i' },
-        { NULL,       0,                       NULL,        0   }
+    static const struct option long_options[] = {
+        {"help", no_argument, NULL, 'h'},
+        {"mclag id", required_argument, NULL, 'i'},
+        {NULL, 0, NULL, 0}
     };
     int opt;
     int err;
@@ -786,7 +772,7 @@ int main(int argc, char **argv)
         goto mclagdctl_disconnect;
     }
 
-    /*read data length*/
+    /* read data length */
     memset(buf, 0, MCLAGDCTL_CMD_SIZE);
     ret = mclagdctl_sock_read(mclagdctl_sock_fd, buf, sizeof(int));
     if (ret <= 0)
@@ -796,8 +782,8 @@ int main(int argc, char **argv)
         goto mclagdctl_disconnect;
     }
 
-    /*cont length*/
-    len = *((int*)buf);
+    /* cont length */
+    len = *((int *)buf);
     if (len <= 0)
     {
         ret = EXIT_FAILURE;
@@ -812,7 +798,7 @@ int main(int argc, char **argv)
         goto mclagdctl_disconnect;
     }
 
-    /*read data*/
+    /* read data */
     ret = mclagdctl_sock_read(mclagdctl_sock_fd, rcv_buf, len);
     if (ret <= 0)
     {
@@ -862,4 +848,3 @@ mclagdctl_disconnect:
 
     return ret;
 }
-

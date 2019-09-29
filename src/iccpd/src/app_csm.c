@@ -47,9 +47,9 @@
     }
 
 /* Application State Machine instance initialization */
-void app_csm_init(struct CSM* csm, int all)
+void app_csm_init(struct CSM *csm, int all)
 {
-    if (csm == NULL )
+    if (csm == NULL)
         return;
 
     APP_CSM_QUEUE_REINIT(csm->app_csm.app_msg_list);
@@ -71,15 +71,15 @@ void app_csm_init(struct CSM* csm, int all)
 }
 
 /* Application State Machine instance tear down */
-void app_csm_finalize(struct CSM* csm)
+void app_csm_finalize(struct CSM *csm)
 {
     mlacp_finalize(csm);
 }
 
 /* Application State Machine Transition */
-void app_csm_transit(struct CSM* csm)
+void app_csm_transit(struct CSM *csm)
 {
-    if (csm == NULL )
+    if (csm == NULL)
         return;
 
     /* torn down event */
@@ -98,28 +98,28 @@ void app_csm_transit(struct CSM* csm)
 }
 
 /* Add received message into application message list */
-void app_csm_enqueue_msg(struct CSM* csm, struct Msg* msg)
+void app_csm_enqueue_msg(struct CSM *csm, struct Msg *msg)
 {
-    ICCHdr* icc_hdr = NULL;
-    ICCParameter* param = NULL;
-    NAKTLV* naktlv = NULL;
+    ICCHdr *icc_hdr = NULL;
+    ICCParameter *param = NULL;
+    NAKTLV *naktlv = NULL;
     int tlv = -1;
     int i = 0;
 
-    if (csm == NULL )
+    if (csm == NULL)
     {
-        if (msg != NULL )
+        if (msg != NULL)
             free(msg);
         return;
     }
-    if (msg == NULL )
+    if (msg == NULL)
         return;
 
-    icc_hdr = (ICCHdr*)msg->buf;
-    param = (ICCParameter*)&msg->buf[sizeof(struct ICCHdr)];
+    icc_hdr = (ICCHdr *)msg->buf;
+    param = (ICCParameter *)&msg->buf[sizeof(struct ICCHdr)];
     *(uint16_t *)param = ntohs(*(uint16_t *)param);
 
-    if ( icc_hdr->ldp_hdr.msg_type == MSG_T_RG_APP_DATA)
+    if (icc_hdr->ldp_hdr.msg_type == MSG_T_RG_APP_DATA)
     {
         if (param->type > TLV_T_MLACP_CONNECT && param->type < TLV_T_MLACP_LIST_END)
             mlacp_enqueue_msg(csm, msg);
@@ -128,7 +128,7 @@ void app_csm_enqueue_msg(struct CSM* csm, struct Msg* msg)
     }
     else if (icc_hdr->ldp_hdr.msg_type == MSG_T_NOTIFICATION)
     {
-        naktlv = (NAKTLV*)&msg->buf[sizeof(ICCHdr)];
+        naktlv = (NAKTLV *)&msg->buf[sizeof(ICCHdr)];
 
         for (i = 0; i < MAX_MSG_LOG_SIZE; ++i)
         {
@@ -152,9 +152,9 @@ void app_csm_enqueue_msg(struct CSM* csm, struct Msg* msg)
 }
 
 /* Get received message from message list */
-struct Msg* app_csm_dequeue_msg(struct CSM* csm)
+struct Msg *app_csm_dequeue_msg(struct CSM *csm)
 {
-    struct Msg* msg = NULL;
+    struct Msg *msg = NULL;
 
     if (!TAILQ_EMPTY(&(csm->app_csm.app_msg_list)))
     {
@@ -166,10 +166,10 @@ struct Msg* app_csm_dequeue_msg(struct CSM* csm)
 }
 
 /* APP NAK message handle function */
-int app_csm_prepare_nak_msg(struct CSM* csm, char* buf, size_t max_buf_size)
+int app_csm_prepare_nak_msg(struct CSM *csm, char *buf, size_t max_buf_size)
 {
-    ICCHdr* icc_hdr = (ICCHdr*)buf;
-    NAKTLV* naktlv = (NAKTLV*)&buf[sizeof(ICCHdr)];
+    ICCHdr *icc_hdr = (ICCHdr *)buf;
+    NAKTLV *naktlv = (NAKTLV *)&buf[sizeof(ICCHdr)];
     size_t msg_len = sizeof(ICCHdr) + sizeof(NAKTLV);
 
     ICCPD_LOG_DEBUG(__FUNCTION__, " Response NAK");
@@ -190,10 +190,10 @@ int app_csm_prepare_nak_msg(struct CSM* csm, char* buf, size_t max_buf_size)
     return msg_len;
 }
 
-int mlacp_bind_local_if(struct CSM* csm, struct LocalInterface* lif)
+int mlacp_bind_local_if(struct CSM *csm, struct LocalInterface *lif)
 {
-    struct LocalInterface* lifp = NULL;
-    struct LocalInterface* lif_po = NULL;
+    struct LocalInterface *lifp = NULL;
+    struct LocalInterface *lif_po = NULL;
 
     if (csm == NULL || lif == NULL)
         return MCLAG_ERROR;
@@ -201,8 +201,9 @@ int mlacp_bind_local_if(struct CSM* csm, struct LocalInterface* lif)
     if (lif->csm == csm)
         return 0;
 
-    /* remove purge from the csm*/
-    do {
+    /* remove purge from the csm */
+    do
+    {
         LIST_FOREACH(lifp, &(MLACP(csm).lif_purge_list), mlacp_purge_next)
         {
             if (lifp == lif)
@@ -210,20 +211,21 @@ int mlacp_bind_local_if(struct CSM* csm, struct LocalInterface* lif)
         }
         if (lifp)
             LIST_REMOVE(lifp, mlacp_purge_next);
-    } while (lifp);
+    }
+    while (lifp);
 
-    /* already join csm?*/
+    /* already join csm? */
     LIST_FOREACH(lifp, &(MLACP(csm).lif_list), mlacp_next)
     {
         if (lifp == lif)
             return 0;
     }
 
-    /* join another csm beofre? remove from csm*/
+    /* join another csm beofre? remove from csm */
     if (lif->csm != NULL)
         mlacp_unbind_local_if(lif);
 
-    /* join new csm*/
+    /* join new csm */
     LIST_INSERT_HEAD(&(MLACP(csm).lif_list), lif, mlacp_next);
     lif->csm = csm;
     if (lif->type == IF_T_PORT_CHANNEL)
@@ -233,12 +235,12 @@ int mlacp_bind_local_if(struct CSM* csm, struct LocalInterface* lif)
     if (lif->type == IF_T_PORT_CHANNEL)
         return 0;
 
-    /* if join a po member, needs to check po joined also*/
+    /* if join a po member, needs to check po joined also */
     LIST_FOREACH(lif_po, &(MLACP(csm).lif_list), mlacp_next)
     {
         if (lif_po->type == IF_T_PORT_CHANNEL && lif_po->po_id == lif->po_id)
         {
-            /*if join a po member, may swss restart, reset portchannel ip mac  to mclagsyncd*/
+            /* if join a po member, may swss restart, reset portchannel ip mac to mclagsyncd */
             update_if_ipmac_on_standby(lif_po);
             return 0;
         }
@@ -249,9 +251,7 @@ int mlacp_bind_local_if(struct CSM* csm, struct LocalInterface* lif)
         lif_po = local_if_find_by_po_id(lif->po_id);
         if (lif_po == NULL)
         {
-            ICCPD_LOG_WARN(__FUNCTION__,
-                           "Failed to find port_channel instance for %d.",
-                           lif->po_id);
+            ICCPD_LOG_WARN(__FUNCTION__, "Failed to find port_channel instance for %d.", lif->po_id);
             return MCLAG_ERROR;
         }
 
@@ -264,18 +264,18 @@ int mlacp_bind_local_if(struct CSM* csm, struct LocalInterface* lif)
     return 0;
 }
 
-int mlacp_unbind_local_if(struct LocalInterface* lif)
+int mlacp_unbind_local_if(struct LocalInterface *lif)
 {
-    if (lif == NULL )
+    if (lif == NULL)
         return MCLAG_ERROR;
 
-    if (lif->csm == NULL )
+    if (lif->csm == NULL)
         return 0;
 
     ICCPD_LOG_INFO(__FUNCTION__, "%s: MLACP un-bind from csm %p", lif->name, lif->csm);
     LIST_REMOVE(lif, mlacp_next);
 
-    if (MLACP(lif->csm).current_state  == MLACP_STATE_EXCHANGE && lif->type == IF_T_PORT_CHANNEL)
+    if (MLACP(lif->csm).current_state == MLACP_STATE_EXCHANGE && lif->type == IF_T_PORT_CHANNEL)
         LIST_INSERT_HEAD(&(MLACP(lif->csm).lif_purge_list), lif, mlacp_purge_next);
     if (lif->type == IF_T_PORT)
         lif->po_id = -1;
@@ -284,9 +284,9 @@ int mlacp_unbind_local_if(struct LocalInterface* lif)
     return 0;
 }
 
-int mlacp_bind_port_channel_to_csm(struct CSM* csm, const char *ifname)
+int mlacp_bind_port_channel_to_csm(struct CSM *csm, const char *ifname)
 {
-    struct System* sys = NULL;
+    struct System *sys = NULL;
     struct LocalInterface *lif_po = NULL;
 
     sys = system_get_instance();
@@ -296,7 +296,7 @@ int mlacp_bind_port_channel_to_csm(struct CSM* csm, const char *ifname)
     if (csm == NULL)
         return 0;
 
-    /* bind po first*/
+    /* bind po first */
     lif_po = local_if_find_by_name(ifname);
     if (lif_po)
     {
@@ -305,16 +305,13 @@ int mlacp_bind_port_channel_to_csm(struct CSM* csm, const char *ifname)
     }
     else
     {
-        ICCPD_LOG_WARN(__FUNCTION__,
-                       "%s: Failed to find a port instance .",
-                       ifname);
+        ICCPD_LOG_WARN(__FUNCTION__, "%s: Failed to find a port instance .", ifname);
         return 0;
     }
-    /* process link state handler after attaching it.*/
+    /* process link state handler after attaching it. */
 
     mlacp_mlag_link_add_handler(csm, lif_po);
 
-    /*ICCPD_LOG_WARN(tag, "po%d active =  %d\n", po_id, po_is_active);*/
+    /* ICCPD_LOG_WARN(tag, "po%d active = %d\n", po_id, po_is_active); */
     return 0;
 }
-

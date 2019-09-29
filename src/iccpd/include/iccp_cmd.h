@@ -26,4 +26,4 @@
 
 int iccp_config_from_file(char *config_default_dir);
 
-#endif /* ICCP_CMD_H_ */
+#endif                          /* ICCP_CMD_H_ */

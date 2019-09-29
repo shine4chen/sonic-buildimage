@@ -36,7 +36,6 @@
 #include <sys/socket.h>
 
 #include "../include/port.h"
-#include "../include/libnetlink.h"
 
 #define FRONT_PANEL_PORT_PREFIX "Ethernet"
 #define PORTCHANNEL_PREFIX      "PortChannel"
@@ -50,56 +49,55 @@
 struct CSM;
 
 #ifndef MAX_BUFSIZE
-    #define MAX_BUFSIZE 4096
+#define MAX_BUFSIZE 4096
 #endif
 
 struct System
 {
-    int server_fd;/* Peer-Link Socket*/
+    int server_fd;              /* Peer-Link Socket */
     int sync_fd;
     int sync_ctrl_fd;
     int arp_receive_fd;
     int ndisc_receive_fd;
     int epoll_fd;
-    struct rtnl_handle rth;
 
-    struct nl_sock * genric_sock;
+    struct nl_sock *genric_sock;
     int genric_sock_seq;
     int family;
-    struct nl_sock * route_sock;
+    struct nl_sock *route_sock;
     int route_sock_seq;
-    struct nl_sock * genric_event_sock;
-    struct nl_sock * route_event_sock;
+    struct nl_sock *genric_event_sock;
+    struct nl_sock *route_event_sock;
 
     int sig_pipe_r;
     int sig_pipe_w;
     int warmboot_start;
     int warmboot_exit;
 
-    /* Info List*/
+    /* Info List */
     LIST_HEAD(csm_list, CSM) csm_list;
     LIST_HEAD(lif_all_list, LocalInterface) lif_list;
     LIST_HEAD(lif_purge_all_list, LocalInterface) lif_purge_list;
 
     /* Settings */
-    char* log_file_path;
-    char* cmd_file_path;
-    char* config_file_path;
-    char* mclagdctl_file_path;
+    char *log_file_path;
+    char *cmd_file_path;
+    char *config_file_path;
+    char *mclagdctl_file_path;
     int pid_file_fd;
     int telnet_port;
-    fd_set readfd; /*record socket need to listen*/
+    fd_set readfd;              /* record socket need to listen */
     int readfd_count;
     time_t csm_trans_time;
     int need_sync_team_again;
     int need_sync_netlink_again;
 };
 
-struct CSM* system_create_csm();
-struct CSM* system_get_csm_by_peer_ip(const char*);
-struct CSM* system_get_csm_by_mlacp_id(int id);
-struct System* system_get_instance();
+struct CSM *system_create_csm();
+struct CSM *system_get_csm_by_peer_ip(const char *);
+struct CSM *system_get_csm_by_mlacp_id(int id);
+struct System *system_get_instance();
 void system_finalize();
-void system_init(struct System*);
+void system_init(struct System *);
 
-#endif /* SYSTEM_H_ */
+#endif                          /* SYSTEM_H_ */

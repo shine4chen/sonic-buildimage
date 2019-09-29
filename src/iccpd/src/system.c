@@ -29,14 +29,14 @@
 #include "../include/scheduler.h"
 
 /* Singleton */
-struct System* system_get_instance()
+struct System *system_get_instance()
 {
-    static struct System* sys = NULL;
+    static struct System *sys = NULL;
 
-    if (sys == NULL )
+    if (sys == NULL)
     {
-        sys = (struct System*)malloc(sizeof(struct System));
-        if (sys == NULL )
+        sys = (struct System *)malloc(sizeof(struct System));
+        if (sys == NULL)
         {
             return NULL;
         }
@@ -47,9 +47,9 @@ struct System* system_get_instance()
 }
 
 /* System instance initialization */
-void system_init(struct System* sys)
+void system_init(struct System *sys)
 {
-    if (sys == NULL )
+    if (sys == NULL)
         return;
 
     sys->server_fd = -1;
@@ -58,7 +58,6 @@ void system_init(struct System* sys)
     sys->arp_receive_fd = -1;
     sys->ndisc_receive_fd = -1;
     sys->epoll_fd = -1;
-    sys->rth.fd = -1;
     sys->family = -1;
     sys->warmboot_start = 0;
     sys->warmboot_exit = 0;
@@ -85,11 +84,11 @@ void system_init(struct System* sys)
 /* System instance tear down */
 void system_finalize()
 {
-    struct System* sys = NULL;
-    struct CSM* csm = NULL;
-    struct LocalInterface* local_if = NULL;
+    struct System *sys = NULL;
+    struct CSM *csm = NULL;
+    struct LocalInterface *local_if = NULL;
 
-    if ((sys = system_get_instance()) == NULL )
+    if ((sys = system_get_instance()) == NULL)
         return;
 
     ICCPD_LOG_INFO(__FUNCTION__, "System resource pool is destructing.");
@@ -117,11 +116,11 @@ void system_finalize()
 
     iccp_system_dinit_netlink_socket();
 
-    if (sys->log_file_path != NULL )
+    if (sys->log_file_path != NULL)
         free(sys->log_file_path);
-    if (sys->cmd_file_path != NULL )
+    if (sys->cmd_file_path != NULL)
         free(sys->cmd_file_path);
-    if (sys->config_file_path != NULL )
+    if (sys->config_file_path != NULL)
         free(sys->config_file_path);
     if (sys->pid_file_fd > 0)
         close(sys->pid_file_fd);
@@ -147,17 +146,17 @@ void system_finalize()
     ICCPD_LOG_INFO(__FUNCTION__, "System resource pool destructed successfully...");
 }
 
-struct CSM* system_create_csm()
+struct CSM *system_create_csm()
 {
-    struct System* sys = NULL;
-    struct CSM* csm = NULL;
+    struct System *sys = NULL;
+    struct CSM *csm = NULL;
 
-    if ((sys = system_get_instance()) == NULL )
+    if ((sys = system_get_instance()) == NULL)
         return NULL;
 
     /* Create a new csm */
-    csm = (struct CSM*)malloc(sizeof(struct CSM));
-    if (csm == NULL )
+    csm = (struct CSM *)malloc(sizeof(struct CSM));
+    if (csm == NULL)
         return NULL;
     else
         memset(csm, 0, sizeof(struct CSM));
@@ -168,12 +167,12 @@ struct CSM* system_create_csm()
 }
 
 /* Get connect state machine instance by peer ip */
-struct CSM* system_get_csm_by_peer_ip(const char* peer_ip)
+struct CSM *system_get_csm_by_peer_ip(const char *peer_ip)
 {
-    struct System* sys = NULL;
-    struct CSM* csm = NULL;
+    struct System *sys = NULL;
+    struct CSM *csm = NULL;
 
-    if ((sys = system_get_instance()) == NULL )
+    if ((sys = system_get_instance()) == NULL)
         return NULL;
 
     LIST_FOREACH(csm, &(sys->csm_list), next)
@@ -185,12 +184,12 @@ struct CSM* system_get_csm_by_peer_ip(const char* peer_ip)
     return NULL;
 }
 
-struct CSM* system_get_csm_by_mlacp_id(int id)
+struct CSM *system_get_csm_by_mlacp_id(int id)
 {
-    struct System* sys = NULL;
-    struct CSM* csm = NULL;
+    struct System *sys = NULL;
+    struct CSM *csm = NULL;
 
-    if ((sys = system_get_instance()) == NULL )
+    if ((sys = system_get_instance()) == NULL)
         return NULL;
 
     LIST_FOREACH(csm, &(sys->csm_list), next)

@@ -41,19 +41,15 @@
 #ifndef IFNAMSIZ
 #define IFNAMSIZ 16
 #endif /*IFNAMSIZ*/
-
 #ifndef INET_ADDRSTRLEN
 #define INET_ADDRSTRLEN 16
-#endif /* INET_ADDRSTRLEN */
-
+#endif                          /* INET_ADDRSTRLEN */
 #ifndef INET6_ADDRSTRLEN
 #define INET6_ADDRSTRLEN 46
-#endif /* INET6_ADDRSTRLEN */
-
+#endif                          /* INET6_ADDRSTRLEN */
 /* For socket binding */
 #define ICCP_TCP_PORT 8888
 #define MAX_ACCEPT_CONNETIONS 20
-
 /* LDP message ID */
 extern uint32_t ICCP_MSG_ID;
 
@@ -65,17 +61,17 @@ struct IccpInfo
     uint32_t icc_rg_id;
     char sender_name[MAX_L_ICC_SENDER_NAME];
     uint32_t status_code;
-    uint8_t peer_capability_flag : 1;
-    uint8_t peer_rg_connect_flag : 1;
-    uint8_t sender_capability_flag : 1;
-    uint8_t sender_rg_connect_flag : 1;
+    uint8_t peer_capability_flag:1;
+    uint8_t peer_rg_connect_flag:1;
+    uint8_t sender_capability_flag:1;
+    uint8_t sender_rg_connect_flag:1;
     uint32_t rejected_msg_id;
 };
 
 /* Receive message node */
 struct Msg
 {
-    char* buf;
+    char *buf;
     size_t len;
     TAILQ_ENTRY(Msg) tail;
 };
@@ -95,9 +91,9 @@ typedef enum ICCP_CONNECTION_STATE ICCP_CONNECTION_STATE_E;
 
 typedef enum stp_role_type_e
 {
-    STP_ROLE_NONE,      /* mstp do nothing*/
-    STP_ROLE_ACTIVE,    /* mstp report port state*/
-    STP_ROLE_STANDBY    /* mstp fwd bpdu & set port state*/
+    STP_ROLE_NONE,              /* mstp do nothing */
+    STP_ROLE_ACTIVE,            /* mstp report port state */
+    STP_ROLE_STANDBY            /* mstp fwd bpdu & set port state */
 } stp_role_type_et;
 
 /* Connection state machine instance */
@@ -116,7 +112,7 @@ struct CSM
     char peer_itf_name[IFNAMSIZ];
     char peer_ip[INET_ADDRSTRLEN];
     char sender_ip[INET_ADDRSTRLEN];
-    void* sock_read_event_ptr;
+    void *sock_read_event_ptr;
 
     /* Msg queue */
     TAILQ_HEAD(msg_list, Msg) msg_list;
@@ -125,7 +121,7 @@ struct CSM
     stp_role_type_et role_type;
 
     /* Peers msg */
-    struct LocalInterface* peer_link_if;
+    struct LocalInterface *peer_link_if;
     struct IccpInfo iccp_info;
     struct AppCSM app_csm;
     ICCP_CONNECTION_STATE_E current_state;
@@ -142,28 +138,28 @@ struct CSM
     LIST_ENTRY(CSM) next;
     LIST_HEAD(csm_if_list, If_info) if_bind_list;
 };
-int iccp_csm_send(struct CSM*, char*, int);
-int iccp_csm_init_msg(struct Msg**, char*, int);
-int iccp_csm_prepare_nak_msg(struct CSM*, char*, size_t);
-int iccp_csm_prepare_iccp_msg(struct CSM*, char*, size_t);
-int iccp_csm_prepare_capability_msg(struct CSM*, char*, size_t);
-int iccp_csm_prepare_rg_connect_msg(struct CSM*, char*, size_t);
-int iccp_csm_prepare_rg_disconnect_msg(struct CSM*, char*, size_t);
-struct Msg* iccp_csm_dequeue_msg(struct CSM*);
+int iccp_csm_send(struct CSM *, char *, int);
+int iccp_csm_init_msg(struct Msg **, char *, int);
+int iccp_csm_prepare_nak_msg(struct CSM *, char *, size_t);
+int iccp_csm_prepare_iccp_msg(struct CSM *, char *, size_t);
+int iccp_csm_prepare_capability_msg(struct CSM *, char *, size_t);
+int iccp_csm_prepare_rg_connect_msg(struct CSM *, char *, size_t);
+int iccp_csm_prepare_rg_disconnect_msg(struct CSM *, char *, size_t);
+struct Msg *iccp_csm_dequeue_msg(struct CSM *);
 void *iccp_get_csm();
-void iccp_csm_init(struct CSM*);
-void iccp_csm_transit(struct CSM*);
-void iccp_csm_finalize(struct CSM*);
-void iccp_csm_status_reset(struct CSM*, int);
+void iccp_csm_init(struct CSM *);
+void iccp_csm_transit(struct CSM *);
+void iccp_csm_finalize(struct CSM *);
+void iccp_csm_status_reset(struct CSM *, int);
 void iccp_csm_stp_role_count(struct CSM *csm);
-void iccp_csm_msg_list_finalize(struct CSM*);
-void iccp_csm_enqueue_msg(struct CSM*, struct Msg*);
-void iccp_csm_fill_icc_rg_id_tlv(struct CSM*, ICCHdr*);
-void iccp_csm_correspond_from_msg(struct CSM*, struct Msg*);
-void iccp_csm_correspond_from_capability_msg(struct CSM*, struct Msg*);
-void iccp_csm_correspond_from_rg_connect_msg(struct CSM*, struct Msg*);
-void iccp_csm_correspond_from_rg_disconnect_msg(struct CSM*, struct Msg*);
+void iccp_csm_msg_list_finalize(struct CSM *);
+void iccp_csm_enqueue_msg(struct CSM *, struct Msg *);
+void iccp_csm_fill_icc_rg_id_tlv(struct CSM *, ICCHdr *);
+void iccp_csm_correspond_from_msg(struct CSM *, struct Msg *);
+void iccp_csm_correspond_from_capability_msg(struct CSM *, struct Msg *);
+void iccp_csm_correspond_from_rg_connect_msg(struct CSM *, struct Msg *);
+void iccp_csm_correspond_from_rg_disconnect_msg(struct CSM *, struct Msg *);
 
-int mlacp_bind_port_channel_to_csm(struct CSM* csm, const char *ifname);
+int mlacp_bind_port_channel_to_csm(struct CSM *csm, const char *ifname);
 
-#endif /* ICCP_CSM_H_ */
+#endif                          /* ICCP_CSM_H_ */

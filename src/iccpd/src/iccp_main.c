@@ -33,7 +33,7 @@
 #include "../include/scheduler.h"
 #include "../include/system.h"
 
-int check_instance(char* pid_file_path)
+int check_instance(char *pid_file_path)
 {
     int pid_file = 0;
     int rc = 0;
@@ -42,7 +42,7 @@ int check_instance(char* pid_file_path)
         return MCLAG_ERROR;
 
     pid_file = open(pid_file_path, O_CREAT | O_RDWR, 0666);
-    if (pid_file <= 0 )
+    if (pid_file <= 0)
     {
         fprintf(stderr, "Can't open a pid file. Terminate.\n");
         close(pid_file);
@@ -64,7 +64,7 @@ int check_instance(char* pid_file_path)
     return pid_file;
 }
 
-void init_daemon(char* pid_file_path, int pid_file)
+void init_daemon(char *pid_file_path, int pid_file)
 {
     pid_t pid, sid;
 
@@ -108,8 +108,7 @@ static inline int iccpd_make_rundir(void)
     ret = mkdir(ICCPD_RUN_DIR, 0755);
     if (ret && errno != EEXIST)
     {
-        ICCPD_LOG_ERR(__FUNCTION__, "Failed to create directory \"%s\"",
-                      ICCPD_RUN_DIR);
+        ICCPD_LOG_ERR(__FUNCTION__, "Failed to create directory \"%s\"", ICCPD_RUN_DIR);
 
         return -errno;
     }
@@ -120,7 +119,7 @@ static inline int iccpd_make_rundir(void)
 void iccpd_signal_handler(int sig)
 {
     int err;
-    struct System* sys = NULL;
+    struct System *sys = NULL;
     const char warmboot_flag = 'w';
 
     sys = system_get_instance();
@@ -137,7 +136,7 @@ retry:
     return;
 }
 
-static int iccpd_signal_init(struct System* sys)
+static int iccpd_signal_init(struct System *sys)
 {
     int fds[2];
     int err;
@@ -189,7 +188,7 @@ static int iccpd_signal_init(struct System* sys)
         goto close_pipe;
     }
 
-    FD_SET( fds[0], &(sys->readfd));
+    FD_SET(fds[0], &(sys->readfd));
     sys->readfd_count++;
 
     return 0;
@@ -200,10 +199,10 @@ close_pipe:
     return err;
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     int pid_file_fd = 0;
-    struct System* sys = NULL;
+    struct System *sys = NULL;
     int err;
     struct CmdOptionParser parser = CMD_OPTION_PARSER_INIT_VALUE;
 
@@ -214,8 +213,7 @@ int main(int argc, char* argv[])
     if (getuid() != 0)
     {
         fprintf(stderr,
-                "This program needs root permission to do device manipulation. "
-                "Please use sudo to execute it or change your user to root.\n");
+                "This program needs root permission to do device manipulation. " "Please use sudo to execute it or change your user to root.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -242,8 +240,7 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
 
-    /*if(!parser.console_log)
-        init_daemon(parser.pid_file_path, pid_file_fd);*/
+    /* if(!parser.console_log) init_daemon(parser.pid_file_path, pid_file_fd); */
 
     log_init(&parser);
 
@@ -265,8 +262,7 @@ int main(int argc, char* argv[])
     scheduler_init();
     scheduler_start();
     system_finalize();
-    /*scheduler_finalize();
-       log_finalize();*/
+    /* scheduler_finalize(); log_finalize(); */
 
     return EXIT_SUCCESS;
 }

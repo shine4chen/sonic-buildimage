@@ -28,7 +28,7 @@
 #include "../include/logger.h"
 
 /* Return 0 if the checking procedure is failed; otherwise, 1 (non-zero) will be returned. */
-typedef int (*ConsistencyCheckFunc)(char* ifname);
+typedef int (*ConsistencyCheckFunc)(char *ifname);
 
 const char *reasons[] = {
     /* REASON_NONE */
@@ -44,11 +44,11 @@ const char *reasons[] = {
 };
 
 /* Consistency Checking functions */
-static int iccp_check_interface_mode( char* ifname)
+static int iccp_check_interface_mode(char *ifname)
 {
-    struct CSM* csm = NULL;
-    struct LocalInterface* local_if = NULL;
-    struct PeerInterface* peer_if = NULL;
+    struct CSM *csm = NULL;
+    struct LocalInterface *local_if = NULL;
+    struct PeerInterface *peer_if = NULL;
 
     local_if = local_if_find_by_name(ifname);
     if (local_if == NULL)
@@ -68,11 +68,11 @@ static int iccp_check_interface_mode( char* ifname)
     return 1;
 }
 
-static int iccp_check_interface_layer3_addr(char* ifname)
+static int iccp_check_interface_layer3_addr(char *ifname)
 {
-    struct CSM* csm = NULL;
-    struct LocalInterface* local_if = NULL;
-    struct PeerInterface* peer_if = NULL;
+    struct CSM *csm = NULL;
+    struct LocalInterface *local_if = NULL;
+    struct PeerInterface *peer_if = NULL;
 
     local_if = local_if_find_by_name(ifname);
     if (local_if == NULL)
@@ -92,13 +92,13 @@ static int iccp_check_interface_layer3_addr(char* ifname)
     return 1;
 }
 
-static int iccp_check_interface_vlan(char* ifname)
+static int iccp_check_interface_vlan(char *ifname)
 {
-    struct CSM* csm = NULL;
-    struct PeerInterface* peer_if = NULL;
-    struct VLAN_ID* local_vlan = NULL;
-    struct VLAN_ID* peer_vlan = NULL;
-    struct LocalInterface* local_if = NULL;
+    struct CSM *csm = NULL;
+    struct PeerInterface *peer_if = NULL;
+    struct VLAN_ID *local_vlan = NULL;
+    struct VLAN_ID *peer_vlan = NULL;
+    struct LocalInterface *local_if = NULL;
 
     local_if = local_if_find_by_name(ifname);
     if (local_if == NULL)
@@ -146,14 +146,15 @@ static int iccp_check_interface_vlan(char* ifname)
 
 static const ConsistencyCheckFunc check_func[] = {
     NULL,
-    iccp_check_interface_mode,          /* REASON_INTERFACE_MODE_IS_ASYNC */
+    iccp_check_interface_mode,  /* REASON_INTERFACE_MODE_IS_ASYNC */
     iccp_check_interface_layer3_addr,   /* REASON_PEER_IF_IP_IS_ASYNC */
-    iccp_check_interface_vlan,          /* REASON_PEER_IF_VLAN_IS_ASYNC */
-    NULL                                /* REASON_MAX_ARRAY_SIZE */
+    iccp_check_interface_vlan,  /* REASON_PEER_IF_VLAN_IS_ASYNC */
+    NULL        /* REASON_MAX_ARRAY_SIZE */
 };
+
 #define ARRAY_SIZE(array_name) (sizeof(array_name) / sizeof(array_name[0]))
 
-enum Reason_ID iccp_consistency_check(char* ifname)
+enum Reason_ID iccp_consistency_check(char *ifname)
 {
     int i = 0;
     int ret = 0;
@@ -162,7 +163,7 @@ enum Reason_ID iccp_consistency_check(char* ifname)
     {
         if (check_func[i] == NULL)
             continue;
-        ret = check_func[i](ifname);
+        ret = check_func[i] (ifname);
         if (ret != 1)
         {
             ICCPD_LOG_DEBUG(__FUNCTION__, "%s ret = %d", reasons[i], ret);

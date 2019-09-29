@@ -28,8 +28,7 @@
 #include "../include/cmd_option.h"
 #include "../include/logger.h"
 
-static uint32_t _iccpd_log_level_map[] =
-{
+static uint32_t _iccpd_log_level_map[] = {
     LOG_DEBUG,
     LOG_INFO,
     LOG_NOTICE,
@@ -38,7 +37,7 @@ static uint32_t _iccpd_log_level_map[] =
     LOG_CRIT,
 };
 
-static char* log_level_to_string(int level)
+static char *log_level_to_string(int level)
 {
     switch (level)
     {
@@ -64,7 +63,7 @@ static char* log_level_to_string(int level)
     return "INFO";
 }
 
-struct LoggerConfig* logger_get_configuration()
+struct LoggerConfig *logger_get_configuration()
 {
     static struct LoggerConfig config;
 
@@ -78,26 +77,26 @@ struct LoggerConfig* logger_get_configuration()
     return &config;
 }
 
-void log_init(struct CmdOptionParser* parser)
+void log_init(struct CmdOptionParser *parser)
 {
-    struct LoggerConfig* config = logger_get_configuration();
+    struct LoggerConfig *config = logger_get_configuration();
 
     config->console_log_enabled = parser->console_log;
 }
 
 void log_finalize()
 {
-    /*do nothing*/
+    /* do nothing */
 }
 
-void write_log(const int level, const char* tag, const char* format, ...)
+void write_log(const int level, const char *tag, const char *format, ...)
 {
-    struct LoggerConfig* config = logger_get_configuration();
+    struct LoggerConfig *config = logger_get_configuration();
     char buf[LOGBUF_SIZE];
     va_list args;
-    unsigned int   prefix_len;
-    unsigned int   avbl_buf_len;
-    unsigned int   print_len;
+    unsigned int prefix_len;
+    unsigned int avbl_buf_len;
+    unsigned int print_len;
 
 #if 0
     if (!config->console_log_enabled)
@@ -114,9 +113,8 @@ void write_log(const int level, const char* tag, const char* format, ...)
     print_len = vsnprintf(buf + prefix_len, avbl_buf_len, format, args);
     va_end(args);
 
-    /* Since osal_vsnprintf doesn't always return the exact size written to the buffer,
-     * we must check if the user string length exceeds the remaing buffer size.
-     */
+    /* Since osal_vsnprintf doesn't always return the exact size written to the buffer, we must check if the user string length exceeds the remaing
+       buffer size. */
     if (print_len > avbl_buf_len)
     {
         print_len = avbl_buf_len;
@@ -127,4 +125,3 @@ void write_log(const int level, const char* tag, const char* format, ...)
 
     return;
 }
-

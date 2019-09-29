@@ -30,19 +30,19 @@
 #define MCLAGDCTL_PORT_MEMBER_BUF_LEN 512
 #define ETHER_ADDR_STR_LEN 18
 
-typedef int (*call_enca_msg_fun)(char *msg, int mclag_id,  int argc, char **argv);
+typedef int (*call_enca_msg_fun)(char *msg, int mclag_id, int argc, char **argv);
 typedef int (*call_parse_msg_fun)(char *msg, int data_len);
 
 enum MAC_TYPE_CTL
 {
-    MAC_TYPE_STATIC_CTL     = 1,
-    MAC_TYPE_DYNAMIC_CTL    = 2,
+    MAC_TYPE_STATIC_CTL = 1,
+    MAC_TYPE_DYNAMIC_CTL = 2,
 };
 
 enum MAC_AGE_TYPE_CTL
 {
-    MAC_AGE_LOCAL_CTL   = 1,    /*MAC in local switch is ageout*/
-    MAC_AGE_PEER_CTL    = 2     /*MAC in peer switch is ageout*/
+    MAC_AGE_LOCAL_CTL = 1,      /* MAC in local switch is ageout */
+    MAC_AGE_PEER_CTL = 2        /* MAC in peer switch is ageout */
 };
 
 enum id_command_type
@@ -135,16 +135,15 @@ struct mclagd_ndisc_msg
 
 struct mclagd_mac_msg
 {
-    unsigned char     op_type;/*add or del*/
-    unsigned char     fdb_type;/*static or dynamic*/
-    char     mac_str[ETHER_ADDR_STR_LEN];
+    unsigned char op_type;      /* add or del */
+    unsigned char fdb_type;     /* static or dynamic */
+    char mac_str[ETHER_ADDR_STR_LEN];
     unsigned short vid;
-    /*Current if name that set in chip*/
-    char     ifname[MCLAGDCTL_MAX_L_PORT_NANE];
-    /*if we set the mac to peer-link, origin_ifname store the
-       original if name that learned from chip*/
-    char     origin_ifname[MCLAGDCTL_MAX_L_PORT_NANE];
-    unsigned char age_flag;/*local or peer is age?*/
+    /* Current if name that set in chip */
+    char ifname[MCLAGDCTL_MAX_L_PORT_NANE];
+    /* if we set the mac to peer-link, origin_ifname store the original if name that learned from chip */
+    char origin_ifname[MCLAGDCTL_MAX_L_PORT_NANE];
+    unsigned char age_flag;     /* local or peer is age? */
 };
 
 struct mclagd_local_if
@@ -153,14 +152,14 @@ struct mclagd_local_if
     char type[MCLAGDCTL_PARA1_LEN];
     char name[MCLAGDCTL_MAX_L_PORT_NANE];
     unsigned char mac_addr[MCLAGDCTL_ETHER_ADDR_LEN];
-    char  state[MCLAGDCTL_PARA1_LEN];
+    char state[MCLAGDCTL_PARA1_LEN];
     char ipv4_addr[MCLAGDCTL_INET_ADDR_LEN];
     unsigned char prefixlen;
 
     unsigned char l3_mode;
     unsigned char is_peer_link;
     char portchannel_member_buf[MCLAGDCTL_PORT_MEMBER_BUF_LEN];
-    int po_id; /* Port Channel ID */
+    int po_id;                  /* Port Channel ID */
     unsigned char po_active;
     char mlacp_state[MCLAGDCTL_PARA1_LEN];
     unsigned char isolate_to_peer_link;
@@ -174,12 +173,12 @@ struct mclagd_peer_if
     unsigned char type[MCLAGDCTL_PARA1_LEN];
     char name[MCLAGDCTL_MAX_L_PORT_NANE];
     unsigned char mac_addr[MCLAGDCTL_ETHER_ADDR_LEN];
-    unsigned char  state[MCLAGDCTL_PARA1_LEN];
+    unsigned char state[MCLAGDCTL_PARA1_LEN];
     int po_id;
     unsigned char po_active;
 };
 
-extern int mclagdctl_enca_dump_state(char *msg, int mclag_id,  int argc, char **argv);
+extern int mclagdctl_enca_dump_state(char *msg, int mclag_id, int argc, char **argv);
 extern int mclagdctl_parse_dump_state(char *msg, int data_len);
 extern int mclagdctl_enca_dump_arp(char *msg, int mclag_id, int argc, char **argv);
 extern int mclagdctl_enca_dump_ndisc(char *msg, int mclag_id, int argc, char **argv);
@@ -187,8 +186,7 @@ extern int mclagdctl_parse_dump_arp(char *msg, int data_len);
 extern int mclagdctl_parse_dump_ndisc(char *msg, int data_len);
 extern int mclagdctl_enca_dump_mac(char *msg, int mclag_id, int argc, char **argv);
 extern int mclagdctl_parse_dump_mac(char *msg, int data_len);
-extern int mclagdctl_enca_dump_local_portlist(char *msg, int mclag_id,  int argc, char **argv);
+extern int mclagdctl_enca_dump_local_portlist(char *msg, int mclag_id, int argc, char **argv);
 extern int mclagdctl_parse_dump_local_portlist(char *msg, int data_len);
-extern int mclagdctl_enca_dump_peer_portlist(char *msg, int mclag_id,  int argc, char **argv);
+extern int mclagdctl_enca_dump_peer_portlist(char *msg, int mclag_id, int argc, char **argv);
 extern int mclagdctl_parse_dump_peer_portlist(char *msg, int data_len);
-

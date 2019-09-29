@@ -80,29 +80,29 @@
 #define TLV_T_MLACP_CONNECT             0x0030
 #define TLV_T_MLACP_DISCONNECT          0x0031
 #define TLV_T_MLACP_SYSTEM_CONFIG       0x0032
-#define TLV_T_MLACP_PORT_CONFIG         0x0033  //no support
-#define TLV_T_MLACP_PORT_PRIORITY       0x0034  //no support
-#define TLV_T_MLACP_PORT_STATE          0x0035  //no support
+#define TLV_T_MLACP_PORT_CONFIG         0x0033  // no support
+#define TLV_T_MLACP_PORT_PRIORITY       0x0034  // no support
+#define TLV_T_MLACP_PORT_STATE          0x0035  // no support
 #define TLV_T_MLACP_AGGREGATOR_CONFIG   0x0036
 #define TLV_T_MLACP_AGGREGATOR_STATE    0x0037
 #define TLV_T_MLACP_SYNC_REQUEST        0x0038
 #define TLV_T_MLACP_SYNC_DATA           0x0039
 #define TLV_T_MLACP_HEARTBEAT           0x003A
-#define TLV_T_MLACP_DISCONNECT_CAUSE    0x003B //not yet
+#define TLV_T_MLACP_DISCONNECT_CAUSE    0x003B  // not yet
 
 /* Self define Feature */
-#define TLV_T_MLACP_ORPHAN_PORT         0x1033 //not yet
+#define TLV_T_MLACP_ORPHAN_PORT         0x1033  // not yet
 #define TLV_T_MLACP_PORT_CHANNEL_INFO   0x1034
 #define TLV_T_MLACP_PEERLINK_INFO       0x1035
 #define TLV_T_MLACP_ARP_INFO            0x1036
-#define TLV_T_MLACP_STP_INFO            0x1037//no support
+#define TLV_T_MLACP_STP_INFO            0x1037  // no support
 #define TLV_T_MLACP_MAC_INFO            0x1038
 #define TLV_T_MLACP_WARMBOOT_FLAG       0x1039
 #define TLV_T_MLACP_NDISC_INFO          0x103A
-#define TLV_T_MLACP_LIST_END            0x104a //list end
+#define TLV_T_MLACP_LIST_END            0x104a  // list end
 
 /* Debug */
-static char* get_tlv_type_string(int type)
+static char *get_tlv_type_string(int type)
 {
     switch (type)
     {
@@ -160,7 +160,7 @@ static char* get_tlv_type_string(int type)
         case TLV_T_MLACP_DISCONNECT_CAUSE:
             return "TLV_T_MLACP_DISCONNECT_CAUSE";
 
-        /* NOS Feature */
+            /* NOS Feature */
         case TLV_T_MLACP_ORPHAN_PORT:
             return "TLV_T_MLACP_ORPHAN_PORT";
 
@@ -198,9 +198,8 @@ static char* get_tlv_type_string(int type)
 #define STATUS_CODE_ICCP_RG_REMOVED                     0x00010010
 #define STATUS_CODE_ICCP_APP_REMOVED_FROM_RG            0x00010011
 
-
 /* Debug */
-static char* get_status_string(int status)
+static char *get_status_string(int status)
 {
     switch (status)
     {
@@ -234,6 +233,7 @@ static char* get_status_string(int status)
 
     return "UNKNOWN";
 }
+
 /*
  * RFC 5036
  * 3.5.  LDP Messages
@@ -242,11 +242,11 @@ static char* get_status_string(int status)
 struct LDPHdr
 {
 #if __BYTE_ORDER == __BIG_ENDIAN
-    uint16_t u_bit : 1;
-    uint16_t msg_type : 15;
+    uint16_t u_bit:1;
+    uint16_t msg_type:15;
 #elif __BYTE_ORDER == __LITTLE_ENDIAN
-    uint16_t msg_type : 15;
-    uint16_t u_bit : 1;
+    uint16_t msg_type:15;
+    uint16_t u_bit:1;
 #endif
     uint16_t msg_len;
     uint32_t msg_id;
@@ -284,13 +284,13 @@ typedef struct ICCHdr ICCHdr;
 struct ICCParameter
 {
 #if __BYTE_ORDER == __BIG_ENDIAN
-    uint16_t u_bit : 1;
-    uint16_t f_bit : 1;
-    uint16_t type : 14;
+    uint16_t u_bit:1;
+    uint16_t f_bit:1;
+    uint16_t type:14;
 #elif __BYTE_ORDER == __LITTLE_ENDIAN
-    uint16_t type : 14;
-    uint16_t f_bit : 1;
-    uint16_t u_bit : 1;
+    uint16_t type:14;
+    uint16_t f_bit:1;
+    uint16_t u_bit:1;
 #endif
     uint16_t len;
 } __attribute__ ((packed));
@@ -360,11 +360,11 @@ struct LDPICCPCapabilityTLV
 {
     ICCParameter icc_parameter;
 #if __BYTE_ORDER == __BIG_ENDIAN
-    uint16_t s_bit : 1;
-    uint16_t reserved : 15;
+    uint16_t s_bit:1;
+    uint16_t reserved:15;
 #elif __BYTE_ORDER == __LITTLE_ENDIAN
-    uint16_t reserved : 15;
-    uint16_t s_bit : 1;
+    uint16_t reserved:15;
+    uint16_t s_bit:1;
 #endif
     uint8_t major_ver;
     uint8_t minior_ver;
@@ -382,11 +382,11 @@ struct AppConnectTLV
     ICCParameter icc_parameter;
     uint16_t protocol_version;
 #if __BYTE_ORDER == __BIG_ENDIAN
-    uint16_t a_bit : 1;
-    uint16_t reserved : 15;
+    uint16_t a_bit:1;
+    uint16_t reserved:15;
 #elif __BYTE_ORDER == __LITTLE_ENDIAN
-    uint16_t reserved : 15;
-    uint16_t a_bit : 1;
+    uint16_t reserved:15;
+    uint16_t a_bit:1;
 #endif
 
     /* Optional Sub-TLVs */
@@ -405,7 +405,7 @@ struct AppDisconnectTLV
     ICCParameter icc_parameter;
 
     /* Optional Sub-TLVs */
-    /*   mLACP Disconnect Cause TLV */
+    /* mLACP Disconnect Cause TLV */
 } __attribute__ ((packed));
 
 typedef struct AppDisconnectTLV AppDisconnectTLV;
@@ -420,39 +420,37 @@ struct AppDisconnectCauseTLV
     ICCParameter iccp_parameter;
 
     /* Disconnect Cause String */
-    char cause_string[0];    /* Trick */
+    char cause_string[0];       /* Trick */
 } __attribute__ ((packed));
 
 /*syncd send msg type to iccpd*/
 typedef enum mclag_syncd_msg_type_e_
 {
-    MCLAG_SYNCD_MSG_TYPE_NONE           = 0,
-    MCLAG_SYNCD_MSG_TYPE_FDB_OPERATION  = 1
-}mclag_syncd_msg_type_e;
+    MCLAG_SYNCD_MSG_TYPE_NONE = 0,
+    MCLAG_SYNCD_MSG_TYPE_FDB_OPERATION = 1
+} mclag_syncd_msg_type_e;
 
 typedef enum mclag_msg_type_e_
 {
-    MCLAG_MSG_TYPE_NONE                 = 0,
-    MCLAG_MSG_TYPE_PORT_ISOLATE         = 1,
-    MCLAG_MSG_TYPE_PORT_MAC_LEARN_MODE  = 2,
-    MCLAG_MSG_TYPE_FLUSH_FDB            = 3,
-    MCLAG_MSG_TYPE_SET_MAC              = 4,
-    MCLAG_MSG_TYPE_SET_FDB              = 5,
-    MCLAG_MSG_TYPE_GET_FDB_CHANGES      = 20
-}mclag_msg_type_e;
-
+    MCLAG_MSG_TYPE_NONE = 0,
+    MCLAG_MSG_TYPE_PORT_ISOLATE = 1,
+    MCLAG_MSG_TYPE_PORT_MAC_LEARN_MODE = 2,
+    MCLAG_MSG_TYPE_FLUSH_FDB = 3,
+    MCLAG_MSG_TYPE_SET_MAC = 4,
+    MCLAG_MSG_TYPE_SET_FDB = 5,
+    MCLAG_MSG_TYPE_GET_FDB_CHANGES = 20
+} mclag_msg_type_e;
 
 typedef enum mclag_sub_option_type_e_
 {
-    MCLAG_SUB_OPTION_TYPE_NONE              = 0,
-    MCLAG_SUB_OPTION_TYPE_ISOLATE_SRC       = 1,
-    MCLAG_SUB_OPTION_TYPE_ISOLATE_DST       = 2,
-    MCLAG_SUB_OPTION_TYPE_MAC_LEARN_ENABLE  = 3,
+    MCLAG_SUB_OPTION_TYPE_NONE = 0,
+    MCLAG_SUB_OPTION_TYPE_ISOLATE_SRC = 1,
+    MCLAG_SUB_OPTION_TYPE_ISOLATE_DST = 2,
+    MCLAG_SUB_OPTION_TYPE_MAC_LEARN_ENABLE = 3,
     MCLAG_SUB_OPTION_TYPE_MAC_LEARN_DISABLE = 4,
-    MCLAG_SUB_OPTION_TYPE_SET_MAC_SRC       = 5,
-    MCLAG_SUB_OPTION_TYPE_SET_MAC_DST       = 6
+    MCLAG_SUB_OPTION_TYPE_SET_MAC_SRC = 5,
+    MCLAG_SUB_OPTION_TYPE_SET_MAC_DST = 6
 } mclag_sub_option_type_e;
-
 
 struct IccpSyncdHDr
 {
@@ -466,20 +464,20 @@ typedef struct mclag_sub_option_hdr_t_
 
     uint8_t op_type;
 
-    /*
+    /* 
      * Length of option value, not including the header.
      */
     uint16_t op_len;
     uint8_t data[];
-}mclag_sub_option_hdr_t;
+} mclag_sub_option_hdr_t;
 
 struct mclag_fdb_info
 {
     char mac[ETHER_ADDR_STR_LEN];
     unsigned int vid;
     char port_name[MAX_L_PORT_NAME];
-    short type;     /*dynamic or static*/
-    short op_type;  /*add or del*/
+    short type;                 /* dynamic or static */
+    short op_type;              /* add or del */
 };
 
 /* For storing message log: For Notification TLV */
@@ -497,4 +495,4 @@ struct MsgLog
     uint32_t end_index;
 };
 
-#endif /* MSG_FORMAT_H_ */
+#endif                          /* MSG_FORMAT_H_ */

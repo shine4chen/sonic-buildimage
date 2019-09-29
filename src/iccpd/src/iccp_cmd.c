@@ -36,12 +36,12 @@
 int set_mc_lag_by_id(uint16_t mid)
 {
     int ret = 0;
-    struct CSM* csm = NULL;
+    struct CSM *csm = NULL;
 
     csm = system_get_csm_by_mlacp_id(mid);
     if (!csm)
     {
-        csm = (struct CSM*)iccp_get_csm();
+        csm = (struct CSM *)iccp_get_csm();
         if (csm == NULL)
         {
             return MCLAG_ERROR;
@@ -57,7 +57,7 @@ int set_mc_lag_by_id(uint16_t mid)
 
 #define CONFIG_LINE_LEN  512
 
-int iccp_config_from_command(char * line)
+int iccp_config_from_command(char *line)
 {
     char *cp, *start;
     char token[64];
@@ -85,29 +85,29 @@ int iccp_config_from_command(char * line)
         end++;
 
     *end = '\0';
-    /*mc-lag id*/
-    if (strncmp(cp, MCLAG_ID_STR, strlen(MCLAG_ID_STR)) == 0 )
+    /* mc-lag id */
+    if (strncmp(cp, MCLAG_ID_STR, strlen(MCLAG_ID_STR)) == 0)
     {
         cp += strlen(MCLAG_ID_STR) + 1;
         mid = atoi(cp);
         set_mc_lag_by_id(mid);
     }
-    else if (strncmp(cp, LOCAL_IP_STR, strlen(LOCAL_IP_STR)) == 0) /*local ip*/
+    else if (strncmp(cp, LOCAL_IP_STR, strlen(LOCAL_IP_STR)) == 0)      /* local ip */
     {
         cp += strlen(LOCAL_IP_STR) + 1;
         set_local_address(mid, cp);
     }
-    else if (strncmp(cp, PEER_IP_STR, strlen(PEER_IP_STR)) == 0) /*peer ip*/
+    else if (strncmp(cp, PEER_IP_STR, strlen(PEER_IP_STR)) == 0)        /* peer ip */
     {
         cp += strlen(PEER_IP_STR) + 1;
         set_peer_address(mid, cp);
     }
-    else if (strncmp(cp, PEER_LINK_STR, strlen(PEER_LINK_STR)) == 0)/*peer link*/
+    else if (strncmp(cp, PEER_LINK_STR, strlen(PEER_LINK_STR)) == 0)    /* peer link */
     {
         cp += strlen(PEER_LINK_STR) + 1;
         set_peer_link(mid, cp);
     }
-    else if (strncmp(cp, MCLAG_INTF_STR, strlen(MCLAG_INTF_STR)) == 0)/*mclag interface*/
+    else if (strncmp(cp, MCLAG_INTF_STR, strlen(MCLAG_INTF_STR)) == 0)  /* mclag interface */
     {
         cp += strlen(MCLAG_INTF_STR) + 1;
 
@@ -115,8 +115,7 @@ int iccp_config_from_command(char * line)
         {
             start = cp;
 
-            while (!(*cp == ',' || *cp == '\r' || *cp == '\n') &&
-                   *cp != '\0')
+            while (!(*cp == ',' || *cp == '\r' || *cp == '\n') && *cp != '\0')
                 cp++;
 
             slen = cp - start;
@@ -124,30 +123,28 @@ int iccp_config_from_command(char * line)
             *(token + slen) = '\0';
             iccp_cli_attach_mclag_domain_to_port_channel(mid, token);
 
-            while ((isspace((int)*cp) || *cp == '\n' || *cp == '\r' || *cp == ',') &&
-                   *cp != '\0')
+            while ((isspace((int)*cp) || *cp == '\n' || *cp == '\r' || *cp == ',') && *cp != '\0')
                 cp++;
 
             if (*cp == '\0')
                 break;
         }
     }
-    else if (strncmp(cp, SYSTEM_MAC_STR, strlen(SYSTEM_MAC_STR)) == 0)/*system mac*/
+    else if (strncmp(cp, SYSTEM_MAC_STR, strlen(SYSTEM_MAC_STR)) == 0)  /* system mac */
     {
         cp += strlen(SYSTEM_MAC_STR) + 1;
         set_local_system_id(cp);
     }
     else
     {
-        /*error*/
+        /* error */
     }
 
     return 1;
 }
 
 /* Configration make from file. */
-int
-iccp_config_from_file(char *config_default_dir)
+int iccp_config_from_file(char *config_default_dir)
 {
     FILE *confp = NULL;
     char command_buf[CONFIG_LINE_LEN];
@@ -165,4 +162,3 @@ iccp_config_from_file(char *config_default_dir)
 
     return 0;
 }
-

@@ -53,21 +53,21 @@ struct AppCSM
 
     TAILQ_HEAD(app_msg_list, Msg) app_msg_list;
 
-    uint8_t invalid_msg : 1;
-    uint8_t nak_msg : 1;
+    uint8_t invalid_msg:1;
+    uint8_t nak_msg:1;
 };
 
-void app_csm_init(struct CSM*, int all);
-void app_csm_finalize(struct CSM*);
-void app_csm_transit(struct CSM*);
-int app_csm_prepare_iccp_msg(struct CSM*, char*, size_t);
-void app_csm_enqueue_msg(struct CSM*, struct Msg*);
-struct Msg* app_csm_dequeue_msg(struct CSM*);
-void app_csm_correspond_from_msg(struct CSM*, struct Msg*);
-void app_csm_correspond_from_connect_msg(struct CSM*, struct Msg*);
-void app_csm_correspond_from_connect_ack_msg(struct CSM*, struct Msg*);
-int app_csm_prepare_nak_msg(struct CSM*, char*, size_t);
-int app_csm_prepare_connect_msg(struct CSM*, char*, size_t);
-int app_csm_prepare_connect_ack_msg(struct CSM*, char*, size_t);
+void app_csm_init(struct CSM *, int all);
+void app_csm_finalize(struct CSM *);
+void app_csm_transit(struct CSM *);
+int app_csm_prepare_iccp_msg(struct CSM *, char *, size_t);
+void app_csm_enqueue_msg(struct CSM *, struct Msg *);
+struct Msg *app_csm_dequeue_msg(struct CSM *);
+void app_csm_correspond_from_msg(struct CSM *, struct Msg *);
+void app_csm_correspond_from_connect_msg(struct CSM *, struct Msg *);
+void app_csm_correspond_from_connect_ack_msg(struct CSM *, struct Msg *);
+int app_csm_prepare_nak_msg(struct CSM *, char *, size_t);
+int app_csm_prepare_connect_msg(struct CSM *, char *, size_t);
+int app_csm_prepare_connect_ack_msg(struct CSM *, char *, size_t);
 
-#endif /* APP_CSM_H_ */
+#endif                          /* APP_CSM_H_ */

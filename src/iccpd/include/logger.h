@@ -31,14 +31,13 @@
 
 typedef enum _iccpd_log_level_t
 {
-    DEBUG_LOG_LEVEL     = 0,
-    INFO_LOG_LEVEL      = 1,
-    NOTICE_LOG_LEVEL    = 2,
-    WARN_LOG_LEVEL      = 3,
-    ERR_LOG_LEVEL       = 4,
-    CRITICAL_LOG_LEVEL  = 5
+    DEBUG_LOG_LEVEL = 0,
+    INFO_LOG_LEVEL = 1,
+    NOTICE_LOG_LEVEL = 2,
+    WARN_LOG_LEVEL = 3,
+    ERR_LOG_LEVEL = 4,
+    CRITICAL_LOG_LEVEL = 5
 } _iccpd_log_level_t;
-
 
 #define LOGBUF_SIZE 1024
 #define ICCPD_UTILS_SYSLOG    (syslog)
@@ -57,12 +56,10 @@ struct LoggerConfig
     uint8_t init;
 };
 
-struct LoggerConfig* logger_get_configuration();
-void log_setup(char* progname, char* path);
+struct LoggerConfig *logger_get_configuration();
+void log_setup(char *progname, char *path);
 void log_finalize();
-void log_init(struct CmdOptionParser* parser);
-void write_log(const int level, const char* tag, const char *format, ...);
+void log_init(struct CmdOptionParser *parser);
+void write_log(const int level, const char *tag, const char *format, ...);
 
-#endif /* LOGGER_H_ */
-
-
+#endif                          /* LOGGER_H_ */

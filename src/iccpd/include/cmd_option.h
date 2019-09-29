@@ -51,34 +51,34 @@
 
 struct CmdOption
 {
-    char* desc;
-    char* option;
-    char* parameter;
+    char *desc;
+    char *option;
+    char *parameter;
     LIST_ENTRY(CmdOption) next;
 };
 
 struct CmdOptionParser
 {
-    char* log_file_path;
-    char* pid_file_path;
-    char* cmd_file_path;
-    char* config_file_path;
+    char *log_file_path;
+    char *pid_file_path;
+    char *cmd_file_path;
+    char *config_file_path;
     char *mclagdctl_file_path;
     uint8_t console_log;
     uint16_t telnet_port;
     LIST_HEAD(option_list, CmdOption) option_list;
-    int (*parse)(struct CmdOptionParser*, int, char*[]);
-    void (*init)(struct CmdOptionParser*);
-    void (*finalize)(struct CmdOptionParser*);
-    void (*dump_usage)(struct CmdOptionParser*, char*);
+    int (*parse)(struct CmdOptionParser *, int, char *[]);
+    void (*init)(struct CmdOptionParser *);
+    void (*finalize)(struct CmdOptionParser *);
+    void (*dump_usage)(struct CmdOptionParser *, char *);
 };
 
-int cmd_option_parser_parse(struct CmdOptionParser*, int, char*[]);
-struct CmdOption* cmd_option_add(struct CmdOptionParser*, char*);
-struct CmdOption* cmd_option_find(struct CmdOptionParser*, char*);
-void cmd_option_delete(struct CmdOption*);
-void cmd_option_parser_init(struct CmdOptionParser*);
-void cmd_option_parser_finalize(struct CmdOptionParser*);
-void cmd_option_parser_dump_usage(struct CmdOptionParser*, char*);
+int cmd_option_parser_parse(struct CmdOptionParser *, int, char *[]);
+struct CmdOption *cmd_option_add(struct CmdOptionParser *, char *);
+struct CmdOption *cmd_option_find(struct CmdOptionParser *, char *);
+void cmd_option_delete(struct CmdOption *);
+void cmd_option_parser_init(struct CmdOptionParser *);
+void cmd_option_parser_finalize(struct CmdOptionParser *);
+void cmd_option_parser_dump_usage(struct CmdOptionParser *, char *);
 
-#endif /* CMD_OPTION_H_ */
+#endif                          /* CMD_OPTION_H_ */

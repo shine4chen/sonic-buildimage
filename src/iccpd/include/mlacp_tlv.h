@@ -45,7 +45,7 @@ struct mLACPSysConfigTLV
     uint8_t sys_id[ETHER_ADDR_LEN];
     /* [IEEE-802.1AX], Section 5.3.2. */
     uint16_t sys_priority;
-    /*
+    /* 
      * RFC 7275
      * 7.2.3.  mLACP System Config TLV
      * [Page 51]
@@ -64,7 +64,7 @@ typedef struct mLACPSysConfigTLV mLACPSysConfigTLV;
 struct mLACPAggConfigTLV
 {
     ICCParameter icc_parameter;
-    /*
+    /* 
      * RFC 7275
      * 7.2.4.  mLACP Aggregator Config TLV
      * [Page 53]
@@ -72,7 +72,7 @@ struct mLACPAggConfigTLV
     uint8_t ro_id[8];
     /* [IEEE-802.1AX], Section 5.4.6. */
     uint16_t agg_id;
-    /*
+    /* 
      * RFC 7275
      * 7.2.4.  mLACP Aggregator Config TLV
      * [Page 53]
@@ -80,14 +80,14 @@ struct mLACPAggConfigTLV
     uint8_t mac_addr[ETHER_ADDR_LEN];
     /* [IEEE-802.1AX], Section 5.3.5. */
     uint16_t actor_key;
-    /*
+    /* 
      * RFC 7275
      * 7.2.4.  mLACP Aggregator Config TLV
      * [Page 53]
      */
     uint16_t member_ports_priority;
     uint8_t flags;
-    /*
+    /* 
      * RFC 7275
      * 7.2.4.  mLACP Aggregator Config TLV
      * [Page 54]
@@ -108,7 +108,7 @@ struct mLACPPortConfigTLV
     ICCParameter icc_parameter;
     /* [IEEE-802.1AX], Section 5.3.4. */
     uint16_t port_num;
-    /*
+    /* 
      * RFC 7275
      * 7.2.5.  mLACP Port Config TLV
      * [Page 55]
@@ -120,13 +120,13 @@ struct mLACPPortConfigTLV
     uint16_t port_priority;
     /* IF-MIB [RFC2863] */
     uint32_t port_speed;
-    /*
+    /* 
      * RFC 7275
      * 7.2.4.  mLACP Port Config TLV
      * [Page 55]
      */
     uint8_t flags;
-    /*
+    /* 
      * RFC 7275
      * 7.2.4.  mLACP Port Config TLV
      * [Page 56]
@@ -149,7 +149,7 @@ typedef struct mLACPPortConfigTLV mLACPPortConfigTLV;
 struct mLACPPortPriorityTLV
 {
     ICCParameter icc_parameter;
-    /*
+    /* 
      * RFC 7275
      * 7.2.6.  mLACP Port Priority TLV
      * [Page 57]
@@ -194,7 +194,7 @@ struct mLACPPortStateTLV
     uint16_t actor_key;
     /* [IEEE-802.1AX], Section 5.4.8 */
     uint8_t selected;
-    /*
+    /* 
      * RFC 7275
      * 7.2.7.  mLACP Port State TLV
      * [Page 60]
@@ -230,7 +230,7 @@ struct mLACPAggPortStateTLV
     uint16_t agg_id;
     /* [IEEE-802.1AX], Section 5.3.5. */
     uint16_t actor_key;
-    /*
+    /* 
      * RFC 7275
      * 7.2.8.  mLACP Aggregator State TLV
      * [Page 61]
@@ -248,7 +248,7 @@ typedef struct mLACPAggPortStateTLV mLACPAggPortStateTLV;
 struct mLACPSyncReqTLV
 {
     ICCParameter icc_parameter;
-    /*
+    /* 
      * RFC 7275
      * 7.2.9.  mLACP Synchronization Request TLV
      * [Page 62]
@@ -256,23 +256,23 @@ struct mLACPSyncReqTLV
     uint16_t req_num;
 
 #if __BYTE_ORDER == __BIG_ENDIAN
-    uint16_t c_bit : 1;
-    /*
+    uint16_t c_bit:1;
+    /* 
      * RFC 7275
      * 7.2.9.  mLACP Synchronization Request TLV
      * [Page 63]
      */
-    uint16_t s_bit : 1;
-    uint16_t req_type : 14;
+    uint16_t s_bit:1;
+    uint16_t req_type:14;
 #elif __BYTE_ORDER == __LITTLE_ENDIAN
-    uint16_t req_type : 14;
-    /*
+    uint16_t req_type:14;
+    /* 
      * RFC 7275
      * 7.2.9.  mLACP Synchronization Request TLV
      * [Page 63]
      */
-    uint16_t s_bit : 1;
-    uint16_t c_bit : 1;
+    uint16_t s_bit:1;
+    uint16_t c_bit:1;
 #endif
     /* [IEEE-802.1AX], Section 5.3.4. */
     /* [IEEE-802.1AX], Section 5.4.6. */
@@ -291,7 +291,7 @@ typedef struct mLACPSyncReqTLV mLACPSyncReqTLV;
 struct mLACPSyncDataTLV
 {
     ICCParameter icc_parameter;
-    /*
+    /* 
      * RFC 7275
      * 7.2.10.  mLACP Synchronization Data TLV
      * [Page 64]
@@ -341,7 +341,7 @@ typedef struct mLACPPeerLinkInfoTLV mLACPPeerLinkInfoTLV;
 struct mLACPVLANInfoTLV
 {
     ICCParameter icc_parameter;
-    uint16_t id; /* Local Interface ID, not VLAN ID */
+    uint16_t id;                /* Local Interface ID, not VLAN ID */
     uint16_t num_of_vlan_id;
     struct mLACPVLANData vlanData[0];
 } __attribute__ ((packed));
@@ -349,11 +349,11 @@ struct mLACPVLANInfoTLV
 /* Mac entry Information TLV*/
 struct mLACPMACData
 {
-    uint8_t         type;/*add or del*/
-    char     mac_str[ETHER_ADDR_STR_LEN];
+    uint8_t type;               /* add or del */
+    char mac_str[ETHER_ADDR_STR_LEN];
     uint16_t vid;
-    /*Current if name that set in chip*/
-    char     ifname[MAX_L_PORT_NAME];
+    /* Current if name that set in chip */
+    char ifname[MAX_L_PORT_NAME];
 } __attribute__ ((packed));
 
 /*
@@ -361,25 +361,25 @@ struct mLACPMACData
  */
 struct mLACPMACInfoTLV
 {
-    ICCParameter    icc_parameter;
+    ICCParameter icc_parameter;
     uint16_t num_of_entry;
     struct mLACPMACData MacEntry[0];
 } __attribute__ ((packed));
 
 struct ARPMsg
 {
-    uint8_t     op_type;
-    char     ifname[MAX_L_PORT_NAME];
-    uint32_t    ipv4_addr;
-    uint8_t     mac_addr[ETHER_ADDR_LEN];
+    uint8_t op_type;
+    char ifname[MAX_L_PORT_NAME];
+    uint32_t ipv4_addr;         // net order
+    uint8_t mac_addr[ETHER_ADDR_LEN];
 };
 
 struct NDISCMsg
 {
-    uint8_t     op_type;
-    char     ifname[MAX_L_PORT_NAME];
-    uint32_t    ipv6_addr[4];   /* In network order */
-    uint8_t     mac_addr[ETHER_ADDR_LEN];
+    uint8_t op_type;
+    char ifname[MAX_L_PORT_NAME];
+    uint32_t ipv6_addr[4];
+    uint8_t mac_addr[ETHER_ADDR_LEN];
 };
 
 /*
@@ -387,7 +387,7 @@ struct NDISCMsg
  */
 struct mLACPARPInfoTLV
 {
-    ICCParameter    icc_parameter;
+    ICCParameter icc_parameter;
     /* Local Interface ID */
     uint16_t num_of_entry;
     struct ARPMsg ArpEntry[0];
@@ -398,7 +398,7 @@ struct mLACPARPInfoTLV
  */
 struct mLACPNDISCInfoTLV
 {
-    ICCParameter    icc_parameter;
+    ICCParameter icc_parameter;
     /* Local Interface ID */
     uint16_t num_of_entry;
     struct NDISCMsg NdiscEntry[0];
@@ -410,8 +410,8 @@ struct mLACPNDISCInfoTLV
 struct stp_msg_s;
 struct mLACPSTPInfoTLV
 {
-    ICCParameter    icc_parameter;
-    uint8_t         stp_msg[0];
+    ICCParameter icc_parameter;
+    uint8_t stp_msg[0];
 } __attribute__ ((packed));
 
 /*
@@ -419,8 +419,8 @@ struct mLACPSTPInfoTLV
  */
 struct mLACPHeartbeatTLV
 {
-    ICCParameter    icc_parameter;
-    uint8_t         heartbeat;
+    ICCParameter icc_parameter;
+    uint8_t heartbeat;
 } __attribute__ ((packed));
 
 /*
@@ -428,8 +428,8 @@ struct mLACPHeartbeatTLV
  */
 struct mLACPWarmbootTLV
 {
-    ICCParameter    icc_parameter;
-    uint8_t         warmboot;
+    ICCParameter icc_parameter;
+    uint8_t warmboot;
 } __attribute__ ((packed));
 
 enum NEIGH_OP_TYPE
@@ -441,35 +441,34 @@ enum NEIGH_OP_TYPE
 
 enum MAC_AGE_TYPE
 {
-    MAC_AGE_LOCAL   = 1,    /*MAC in local switch is ageout*/
-    MAC_AGE_PEER    = 2,    /*MAC in peer switch is ageout*/
+    MAC_AGE_LOCAL = 1,          /* MAC in local switch is ageout */
+    MAC_AGE_PEER = 2,   /* MAC in peer switch is ageout */
 };
 
 enum MAC_OP_TYPE
 {
-    MAC_SYNC_ADD    = 1,
-    MAC_SYNC_DEL    = 2,
-    MAC_SYNC_ACK    = 4,
+    MAC_SYNC_ADD = 1,
+    MAC_SYNC_DEL = 2,
+    MAC_SYNC_ACK = 4,
 };
 
 enum MAC_TYPE
 {
-    MAC_TYPE_STATIC     = 1,
-    MAC_TYPE_DYNAMIC    = 2,
+    MAC_TYPE_STATIC = 1,
+    MAC_TYPE_DYNAMIC = 2,
 };
 
 struct MACMsg
 {
-    uint8_t     op_type;    /*add or del*/
-    uint8_t     fdb_type;   /*static or dynamic*/
-    char     mac_str[ETHER_ADDR_STR_LEN];
+    uint8_t op_type;            /* add or del */
+    uint8_t fdb_type;           /* static or dynamic */
+    char mac_str[ETHER_ADDR_STR_LEN];
     uint16_t vid;
-    /*Current if name that set in chip*/
-    char     ifname[MAX_L_PORT_NAME];
-    /*if we set the mac to peer-link, origin_ifname store the
-       original if name that learned from chip*/
-    char     origin_ifname[MAX_L_PORT_NAME];
-    uint8_t age_flag;/*local or peer is age?*/
+    /* Current if name that set in chip */
+    char ifname[MAX_L_PORT_NAME];
+    /* if we set the mac to peer-link, origin_ifname store the original if name that learned from chip */
+    char origin_ifname[MAX_L_PORT_NAME];
+    uint8_t age_flag;           /* local or peer is age? */
 };
 
-#endif /* MLACP_TLV_H_ */
+#endif                          /* MLACP_TLV_H_ */
