@@ -114,7 +114,8 @@ int iccp_mclag_config_dump(char * *buf, int *num, int mclag_id)
             state_info.enabled_po[len - 1] = '\0';
         }
 
-        memcpy(state_buf + MCLAGD_REPLY_INFO_HDR + mclag_num * sizeof(struct mclagd_state), &state_info, sizeof(struct mclagd_state));
+        memcpy(state_buf + MCLAGD_REPLY_INFO_HDR + mclag_num * sizeof(struct mclagd_state),
+               &state_info, sizeof(struct mclagd_state));
         mclag_num++;
 
         if ((mclag_num + 1) * sizeof(struct mclagd_state) > (state_buf_size - MCLAGD_REPLY_INFO_HDR))
@@ -177,7 +178,8 @@ int iccp_arp_dump(char * *buf, int *num, int mclag_id)
             memcpy(mclagd_arp.ipv4_addr, show_ip_str(iccpd_arp->ipv4_addr), 16);
             memcpy(mclagd_arp.mac_addr, iccpd_arp->mac_addr, 6);
 
-            memcpy(arp_buf + MCLAGD_REPLY_INFO_HDR + arp_num * sizeof(struct mclagd_arp_msg), &mclagd_arp, sizeof(struct mclagd_arp_msg));
+            memcpy(arp_buf + MCLAGD_REPLY_INFO_HDR + arp_num * sizeof(struct mclagd_arp_msg),
+                   &mclagd_arp, sizeof(struct mclagd_arp_msg));
 
             arp_num++;
 
@@ -242,7 +244,8 @@ int iccp_ndisc_dump(char * *buf, int *num, int mclag_id)
             memcpy(mclagd_ndisc.ipv6_addr, show_ipv6_str((char *)iccpd_ndisc->ipv6_addr), 46);
             memcpy(mclagd_ndisc.mac_addr, iccpd_ndisc->mac_addr, 6);
 
-            memcpy(ndisc_buf + MCLAGD_REPLY_INFO_HDR + ndisc_num * sizeof(struct mclagd_ndisc_msg), &mclagd_ndisc, sizeof(struct mclagd_ndisc_msg));
+            memcpy(ndisc_buf + MCLAGD_REPLY_INFO_HDR + ndisc_num * sizeof(struct mclagd_ndisc_msg),
+                   &mclagd_ndisc, sizeof(struct mclagd_ndisc_msg));
 
             ndisc_num++;
 
@@ -310,7 +313,8 @@ int iccp_mac_dump(char * *buf, int *num, int mclag_id)
             memcpy(mclagd_mac.origin_ifname, iccpd_mac->origin_ifname, strlen(iccpd_mac->origin_ifname));
             mclagd_mac.age_flag = iccpd_mac->age_flag;
 
-            memcpy(mac_buf + MCLAGD_REPLY_INFO_HDR + mac_num * sizeof(struct mclagd_mac_msg), &mclagd_mac, sizeof(struct mclagd_mac_msg));
+            memcpy(mac_buf + MCLAGD_REPLY_INFO_HDR + mac_num * sizeof(struct mclagd_mac_msg),
+                   &mclagd_mac, sizeof(struct mclagd_mac_msg));
 
             mac_num++;
 
@@ -431,7 +435,8 @@ int iccp_local_if_dump(char * *buf, int *num, int mclag_id)
                 }
             }
 
-            memcpy(lif_buf + MCLAGD_REPLY_INFO_HDR + lif_num * sizeof(struct mclagd_local_if), &mclagd_lif, sizeof(struct mclagd_local_if));
+            memcpy(lif_buf + MCLAGD_REPLY_INFO_HDR + lif_num * sizeof(struct mclagd_local_if),
+                   &mclagd_lif, sizeof(struct mclagd_local_if));
 
             lif_num++;
 
@@ -513,7 +518,8 @@ int iccp_peer_if_dump(char * *buf, int *num, int mclag_id)
             mclagd_pif.po_id = pif_po->po_id;
             mclagd_pif.po_active = pif_po->po_active;
 
-            memcpy(pif_buf + MCLAGD_REPLY_INFO_HDR + pif_num * sizeof(struct mclagd_peer_if), &mclagd_pif, sizeof(struct mclagd_peer_if));
+            memcpy(pif_buf + MCLAGD_REPLY_INFO_HDR + pif_num * sizeof(struct mclagd_peer_if),
+                   &mclagd_pif, sizeof(struct mclagd_peer_if));
 
             pif_num++;
 

@@ -45,6 +45,8 @@
 #include <linux/if_arp.h>
 #include <linux/if_team.h>
 #include <linux/types.h>
+#include <linux/socket.h>
+#include <linux/in6.h>
 
 #include "../include/system.h"
 #include "../include/iccp_ifm.h"
@@ -115,10 +117,14 @@ int iccp_send_and_recv(struct System *sys, struct nl_msg *msg, int (*valid_handl
     if (valid_handler)
         nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, valid_handler, valid_data);
 
-    /* There is a bug in libnl. When implicit sequence number checking is in use the expected next number is increased when NLMSG_DONE is received.
-       The ACK which comes after that correctly includes the original sequence number. However libnl is checking that number against the incremented
-       one and therefore ack handler is never called and nl_recvmsgs finished with an error. To resolve this, custom sequence number checking is used 
-       here. */
+    /* There is a bug in libnl. When implicit sequence number checking is in
+     * use the expected next number is increased when NLMSG_DONE is
+     * received. The ACK which comes after that correctly includes the
+     * original sequence number. However libnl is checking that number
+     * against the incremented one and therefore ack handler is never called
+     * and nl_recvmsgs finished with an error. To resolve this, custom
+     * sequence number checking is used here.
+     */
 
     acked = false;
 
@@ -1146,6 +1152,53 @@ static int iccp_genric_event_handler(struct nl_msg *msg, void *arg)
     return NL_SKIP;
 }
 
+int iccp_make_nd_socket(void)
+{
+    int sock;
+    int ret;
+    int val;
+    struct icmp6_filter filter;
+
+    sock = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
+
+    if (sock < 0)
+    {
+        ICCPD_LOG_ERR(__FUNCTION__, "Failed to create nd socket");
+        return MCLAG_ERROR;
+    }
+
+    val = 1;
+#ifdef IPV6_RECVPKTINFO /* 2292bis-01 */
+    if (setsockopt(sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, &val, sizeof(val)) < 0)
+    {
+        ICCPD_LOG_ERR(__FUNCTION__, "Failed to set IPV6_RECVPKTINFO for nd socket");
+        close(sock);
+        return MCLAG_ERROR;
+    }
+#else /* RFC2292 */
+    if (setsockopt(sock, IPPROTO_IPV6, IPV6_PKTINFO, &val, sizeof(val)) < 0)
+    {
+        ICCPD_LOG_ERR(__FUNCTION__, "Failed to set IPV6_PKTINFO for nd socket");
+        close(sock);
+        return MCLAG_ERROR;
+    }
+#endif
+
+    ICMP6_FILTER_SETBLOCKALL(&filter);
+    ICMP6_FILTER_SETPASS(ND_NEIGHBOR_ADVERT, &filter);
+
+    ret = setsockopt(sock, IPPROTO_ICMPV6, ICMP6_FILTER, &filter, sizeof(struct icmp6_filter));
+
+    if (ret < 0)
+    {
+        ICCPD_LOG_ERR(__FUNCTION__, "Failed to set ICMP6_FILTER");
+        close(sock);
+        return MCLAG_ERROR;
+    }
+
+    return sock;
+}
+
 /*init netlink socket*/
 int iccp_system_init_netlink_socket()
 {
@@ -1287,26 +1340,11 @@ int iccp_system_init_netlink_socket()
         }
     }
 
-    /* receive ipv6 packet socket */
-    sys->ndisc_receive_fd = socket(PF_PACKET, SOCK_DGRAM, 0);
+    sys->ndisc_receive_fd = iccp_make_nd_socket();
+
     if (sys->ndisc_receive_fd < 0)
     {
-        ICCPD_LOG_ERR(__FUNCTION__, "socket error ");
         goto err_return;
-    }
-
-    if (1)
-    {
-        struct sockaddr_ll sll;
-        memset(&sll, 0, sizeof(sll));
-        sll.sll_family = AF_PACKET;
-        sll.sll_protocol = htons(ETH_P_IPV6);
-        sll.sll_ifindex = 0;
-        if (bind(sys->ndisc_receive_fd, (struct sockaddr *)&sll, sizeof(sll)) < 0)
-        {
-            ICCPD_LOG_ERR(__FUNCTION__, "socket bind error");
-            goto err_return;
-        }
     }
 
     goto succes_return;
@@ -1406,7 +1444,10 @@ static int iccp_receive_arp_packet_handler(struct System *sys)
     /* Only process ARPOP_REPLY */
     if (n < sizeof(*a) ||
         a->ar_op != htons(ARPOP_REPLY) ||
-        a->ar_pln != 4 || a->ar_pro != htons(ETH_P_IP) || a->ar_hln != sll.sll_halen || sizeof(*a) + 2 * 4 + 2 * a->ar_hln > n)
+        a->ar_pln != 4 ||
+        a->ar_pro != htons(ETH_P_IP) ||
+        a->ar_hln != sll.sll_halen ||
+        sizeof(*a) + 2 * 4 + 2 * a->ar_hln > n)
         return 0;
 
     ifindex = sll.sll_ifindex;
@@ -1418,52 +1459,66 @@ static int iccp_receive_arp_packet_handler(struct System *sys)
     return 0;
 }
 
-static int iccp_receive_ndisc_packet_handler(struct System *sys)
+int iccp_receive_ndisc_packet_handler(struct System *sys)
 {
-    struct ipv6hdr *ipv6h = NULL;
-    struct nd_msg *msg = NULL;
+    uint8_t buf[4096];
+    uint8_t adata[1024];
+    struct sockaddr_in6 from;
+    unsigned int ifindex = 0;
+    struct msghdr msg;
+    struct iovec iov;
+    struct cmsghdr *cmsgptr;
+    struct nd_msg *ndmsg = NULL;
     struct nd_opt_hdr *nd_opt = NULL;
-    unsigned char buf[1024];
-    struct sockaddr_ll sll;
-    socklen_t sll_len = sizeof(sll);
-    int n;
-    unsigned int ifindex;
     struct in6_addr target;
     uint8_t mac_addr[ETHER_ADDR_LEN];
-    char *opt = NULL;
+    int8_t *opt = NULL;
     int opt_len = 0, l = 0;
+    int len;
 
-    n = recvfrom(sys->ndisc_receive_fd, buf, sizeof(buf), MSG_DONTWAIT, (struct sockaddr *)&sll, &sll_len);
-    if (n < 0)
+    memset(mac_addr, 0, ETHER_ADDR_LEN);
+
+    /* Fill in message and iovec. */
+    msg.msg_name = (void *)(&from);
+    msg.msg_namelen = sizeof(struct sockaddr_in6);
+    msg.msg_iov = &iov;
+    msg.msg_iovlen = 1;
+    msg.msg_control = (void *)adata;
+    msg.msg_controllen = sizeof adata;
+    iov.iov_base = buf;
+    iov.iov_len = 4096;
+
+    len = recvmsg(sys->ndisc_receive_fd, &msg, 0);
+
+    if (len < 0)
     {
-        ICCPD_LOG_DEBUG(__FUNCTION__, "ndisc recvfrom error!");
+        ICCPD_LOG_DEBUG(__FUNCTION__, "ndisc recvmsg error!");
         return MCLAG_ERROR;
     }
 
-    if (sll.sll_protocol != htons(ETH_P_IPV6))
+    if (msg.msg_controllen >= sizeof(struct cmsghdr))
+        for (cmsgptr = CMSG_FIRSTHDR(&msg); cmsgptr != NULL; cmsgptr = CMSG_NXTHDR(&msg, cmsgptr))
+        {
+            /* I want interface index which this packet comes from. */
+            if (cmsgptr->cmsg_level == IPPROTO_IPV6 && cmsgptr->cmsg_type == IPV6_PKTINFO)
+            {
+                struct in6_pktinfo *ptr;
+
+                ptr = (struct in6_pktinfo *)CMSG_DATA(cmsgptr);
+                ifindex = ptr->ipi6_ifindex;
+            }
+        }
+
+    ndmsg = (struct nd_msg *)buf;
+
+    if (ndmsg->icmph.icmp6_type != NDISC_NEIGHBOUR_ADVERTISEMENT)
         return 0;
 
-    ifindex = sll.sll_ifindex;
-    /* memcpy(mac_addr, (char*)sll.sll_addr, ETHER_ADDR_LEN); */
-    memset(mac_addr, 0, ETHER_ADDR_LEN);
+    memcpy((char *)(&target), (char *)(&ndmsg->target), sizeof(struct in6_addr));
 
-    ipv6h = (struct ipv6hdr *)buf;
-    msg = (struct nd_msg *)(buf + sizeof(struct ipv6hdr));
+    opt = (char *)ndmsg->opt;
 
-    if (ipv6h->version != 6)
-        return 0;
-
-    if (ipv6h->nexthdr != NEXTHDR_ICMP)
-        return 0;
-
-    if (msg->icmph.icmp6_type != NDISC_NEIGHBOUR_ADVERTISEMENT)
-        return 0;
-
-    memcpy((char *)(&target), (char *)(&msg->target), sizeof(struct in6_addr));
-
-    opt = (char *)msg->opt;
-
-    opt_len = ntohs(ipv6h->payload_len) - sizeof(struct nd_msg);
+    opt_len = len - sizeof(struct nd_msg);
 
     if (opt && opt_len > 0)
     {

@@ -248,7 +248,8 @@ int mclagdctl_parse_dump_state(char *msg, int data_len)
         fprintf(stdout, "%s: %02x:%02x:%02x:%02x:%02x:%02x \n",
                 "Peer Link Mac",
                 state_info->peer_link_mac[0], state_info->peer_link_mac[1],
-                state_info->peer_link_mac[2], state_info->peer_link_mac[3], state_info->peer_link_mac[4], state_info->peer_link_mac[5]);
+                state_info->peer_link_mac[2], state_info->peer_link_mac[3],
+                state_info->peer_link_mac[4], state_info->peer_link_mac[5]);
 
         if (state_info->role == 0)
             fprintf(stdout, "%s: %s\n", "Role", "None");
@@ -322,7 +323,8 @@ int mclagdctl_parse_dump_arp(char *msg, int data_len)
         fprintf(stdout, "%-20s", arp_info->ipv4_addr);
         fprintf(stdout, "%02x:%02x:%02x:%02x:%02x:%02x",
                 arp_info->mac_addr[0], arp_info->mac_addr[1],
-                arp_info->mac_addr[2], arp_info->mac_addr[3], arp_info->mac_addr[4], arp_info->mac_addr[5]);
+                arp_info->mac_addr[2], arp_info->mac_addr[3],
+                arp_info->mac_addr[4], arp_info->mac_addr[5]);
         fprintf(stdout, "   ");
         fprintf(stdout, "%-20s", arp_info->ifname);
         fprintf(stdout, "\n");
@@ -353,7 +355,8 @@ int mclagdctl_parse_dump_ndisc(char *msg, int data_len)
         fprintf(stdout, "%-52s", ndisc_info->ipv6_addr);
         fprintf(stdout, "%02x:%02x:%02x:%02x:%02x:%02x",
                 ndisc_info->mac_addr[0], ndisc_info->mac_addr[1],
-                ndisc_info->mac_addr[2], ndisc_info->mac_addr[3], ndisc_info->mac_addr[4], ndisc_info->mac_addr[5]);
+                ndisc_info->mac_addr[2], ndisc_info->mac_addr[3],
+                ndisc_info->mac_addr[4], ndisc_info->mac_addr[5]);
         fprintf(stdout, "   ");
         fprintf(stdout, "%-20s", ndisc_info->ifname);
         fprintf(stdout, "\n");
@@ -473,7 +476,8 @@ int mclagdctl_parse_dump_local_portlist(char *msg, int data_len)
             fprintf(stdout, "%s: %02x:%02x:%02x:%02x:%02x:%02x \n",
                     "MAC",
                     lif_info->mac_addr[0], lif_info->mac_addr[1],
-                    lif_info->mac_addr[2], lif_info->mac_addr[3], lif_info->mac_addr[4], lif_info->mac_addr[5]);
+                    lif_info->mac_addr[2], lif_info->mac_addr[3],
+                    lif_info->mac_addr[4], lif_info->mac_addr[5]);
 
             fprintf(stdout, "%s: %s\n", "IPv4Address", lif_info->ipv4_addr);
             fprintf(stdout, "%s: %d\n", "Prefixlen", lif_info->prefixlen);
@@ -481,8 +485,9 @@ int mclagdctl_parse_dump_local_portlist(char *msg, int data_len)
             fprintf(stdout, "%s: %s\n", "IsL3Interface", lif_info->l3_mode ? "Yes" : "No");
             /* fprintf(stdout, "%s: %s\n", "IsPeerlink", lif_info->is_peer_link ? "Yes" : "No"); */
             fprintf(stdout, "%s: %s\n", "MemberPorts", lif_info->portchannel_member_buf);
-            /* fprintf(stdout,"%s: %d\n" ,"PortchannelId", lif_info->po_id); fprintf(stdout,"%s: %d\n" ,"PortchannelIsUp", lif_info->po_active);
-               fprintf(stdout,"%s: %s\n", "MlacpState", lif_info->mlacp_state); */
+            /*fprintf(stdout,"%s: %d\n" ,"PortchannelId", lif_info->po_id);
+               fprintf(stdout,"%s: %d\n" ,"PortchannelIsUp", lif_info->po_active);
+               fprintf(stdout,"%s: %s\n", "MlacpState", lif_info->mlacp_state);*/
             fprintf(stdout, "%s: %s\n", "IsIsolateWithPeerlink", lif_info->isolate_to_peer_link ? "Yes" : "No");
             fprintf(stdout, "%s: %s\n", "VlanList", lif_info->vlanlist);
         }
@@ -546,10 +551,12 @@ int mclagdctl_parse_dump_peer_portlist(char *msg, int data_len)
         fprintf(stdout, "%s: %02x:%02x:%02x:%02x:%02x:%02x \n",
                 "MAC",
                 pif_info->mac_addr[0], pif_info->mac_addr[1],
-                pif_info->mac_addr[2], pif_info->mac_addr[3], pif_info->mac_addr[4], pif_info->mac_addr[5]);
+                pif_info->mac_addr[2], pif_info->mac_addr[3],
+                pif_info->mac_addr[4], pif_info->mac_addr[5]);
 
         fprintf(stdout, "%s: %s\n", "State", pif_info->state);
-        /* fprintf(stdout,"%s: %d\n" ,"PortchannelId", pif_info->po_id); fprintf(stdout,"%s: %d\n" ,"PortchannelIsActive", pif_info->po_active); */
+        /*fprintf(stdout,"%s: %d\n" ,"PortchannelId", pif_info->po_id);
+           fprintf(stdout,"%s: %d\n" ,"PortchannelIsActive", pif_info->po_active);*/
 
         for (pos = 0; pos < 60; ++pos)
             fprintf(stdout, "-");
@@ -672,7 +679,9 @@ static void mclagdctl_print_help(const char *argv0)
     struct command_type *cmd_type;
 
     fprintf(stdout, "%s [options] command [command args]\n"
-            "    -h --help                Show this help\n" "    -i --mclag-id             Specify one mclag id\n", argv0);
+            "    -h --help                Show this help\n"
+            "    -i --mclag-id             Specify one mclag id\n",
+            argv0);
     fprintf(stdout, "Commands:\n");
 
     for (i = 0; i < COMMAND_TYPE_COUNT; i++)

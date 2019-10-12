@@ -343,8 +343,11 @@ int iccp_cli_detach_mclag_domain_to_port_channel(const char *ifname)
         return MCLAG_ERROR;
     }
 
-    /* find po */
-    if (!(lif_po = local_if_find_by_name(ifname)) || lif_po->type != IF_T_PORT_CHANNEL || lif_po->po_id <= 0 || lif_po->csm == NULL)
+    /* find po*/
+    if (!(lif_po = local_if_find_by_name(ifname))
+        || lif_po->type != IF_T_PORT_CHANNEL
+        || lif_po->po_id <= 0
+        || lif_po->csm == NULL)
     {
         return MCLAG_ERROR;
     }
@@ -391,8 +394,12 @@ int parseMacString(const char *str_mac, uint8_t *bin_mac)
         return MCLAG_ERROR;
     }
 
-    /* first check that all mac address separators are equal to each other 2, 5, 8, 11, and 14 are MAC address separator positions */
-    if (!(str_mac[2] == str_mac[5] && str_mac[5] == str_mac[8] && str_mac[8] == str_mac[11] && str_mac[11] == str_mac[14]))
+    /* first check that all mac address separators are equal to each other
+        2, 5, 8, 11, and 14 are MAC address separator positions*/
+    if (!(str_mac[2]  == str_mac[5]
+          && str_mac[5]  == str_mac[8]
+          && str_mac[8]  == str_mac[11]
+          && str_mac[11] == str_mac[14]))
     {
         return MCLAG_ERROR;
     }

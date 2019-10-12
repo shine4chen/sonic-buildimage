@@ -262,8 +262,8 @@ void iccp_csm_transit(struct CSM *csm)
         return;
     }
 
-    /* if (csm->current_state != ICCP_NONEXISTENT) ICCPD_LOG_DEBUG(__FUNCTION__, "#Begin# id:%d, fd:%d, ICCP CSM State:%d", csm->mlag_id,
-       csm->sock_fd, csm->current_state); */
+    /*if (csm->current_state != ICCP_NONEXISTENT)
+        ICCPD_LOG_DEBUG(__FUNCTION__, "#Begin# id:%d, fd:%d, ICCP CSM State:%d", csm->mlag_id, csm->sock_fd, csm->current_state);*/
 
     msg = iccp_csm_dequeue_msg(csm);
 
@@ -368,8 +368,8 @@ void iccp_csm_transit(struct CSM *csm)
                 break;
         }
     }
-    /* if (csm->current_state != ICCP_NONEXISTENT && prev_state != csm->current_state) ICCPD_LOG_DEBUG(__FUNCTION__, "#End# id:%d, fd:%d, ICCP CSM
-       State:%d", csm->mlag_id, csm->sock_fd, csm->current_state); */
+    /*if (csm->current_state != ICCP_NONEXISTENT && prev_state != csm->current_state)
+        ICCPD_LOG_DEBUG(__FUNCTION__, "#End# id:%d, fd:%d, ICCP CSM State:%d", csm->mlag_id, csm->sock_fd, csm->current_state);*/
 }
 
 /* Set up ICCP message */
@@ -640,7 +640,10 @@ void iccp_csm_correspond_from_capability_msg(struct CSM *csm, struct Msg *msg)
     if (cap->icc_parameter.u_bit == 0x1
         && cap->icc_parameter.f_bit == 0x0
         && cap->icc_parameter.type == TLV_T_ICCP_CAPABILITY
-        && ntohs(cap->icc_parameter.len) == (TLV_L_ICCP_CAPABILITY) && cap->s_bit == 1 && cap->major_ver == 0x1 && cap->minior_ver == 0x0)
+        && ntohs(cap->icc_parameter.len) == (TLV_L_ICCP_CAPABILITY)
+        && cap->s_bit == 1
+        && cap->major_ver == 0x1
+        && cap->minior_ver == 0x0)
     {
         csm->iccp_info.peer_capability_flag = 0x1;
     }
@@ -653,7 +656,9 @@ void iccp_csm_correspond_from_rg_connect_msg(struct CSM *csm, struct Msg *msg)
 
     *(uint16_t *)sender = ntohs(*(uint16_t *)sender);
 
-    if (sender->icc_parameter.u_bit == 0x0 && sender->icc_parameter.f_bit == 0x0 && sender->icc_parameter.type == TLV_T_ICC_SENDER_NAME)
+    if (sender->icc_parameter.u_bit == 0x0 &&
+        sender->icc_parameter.f_bit == 0x0 &&
+        sender->icc_parameter.type == TLV_T_ICC_SENDER_NAME)
     {
         csm->iccp_info.peer_rg_connect_flag = 0x1;
     }
@@ -669,7 +674,8 @@ void iccp_csm_correspond_from_rg_disconnect_msg(struct CSM *csm, struct Msg *msg
     if (diconn_code->icc_parameter.u_bit == 0x0
         && diconn_code->icc_parameter.f_bit == 0x0
         && diconn_code->icc_parameter.type == TLV_T_DISCONNECT_CODE
-        && ntohs(diconn_code->icc_parameter.len) == (TLV_L_DISCONNECT_CODE) && ntohl(diconn_code->iccp_status_code) == (STATUS_CODE_ICCP_RG_REMOVED))
+        && ntohs(diconn_code->icc_parameter.len) == (TLV_L_DISCONNECT_CODE)
+        && ntohl(diconn_code->iccp_status_code) == (STATUS_CODE_ICCP_RG_REMOVED))
     {
         csm->iccp_info.sender_rg_connect_flag = 0x0;
         csm->iccp_info.peer_rg_connect_flag = 0x0;

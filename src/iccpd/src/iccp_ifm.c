@@ -218,7 +218,8 @@ static void do_arp_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], int
         {
             /* update ARP */
             if (arp_info->op_type != arp_msg->op_type
-                || strcmp(arp_info->ifname, arp_msg->ifname) != 0 || memcmp(arp_info->mac_addr, arp_msg->mac_addr, ETHER_ADDR_LEN) != 0)
+                || strcmp(arp_info->ifname, arp_msg->ifname) != 0
+                || memcmp(arp_info->mac_addr, arp_msg->mac_addr, ETHER_ADDR_LEN) != 0)
             {
                 arp_update = 1;
                 arp_info->op_type = arp_msg->op_type;
@@ -391,7 +392,8 @@ static void do_ndisc_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], i
         {
             /* update ND */
             if (ndisc_info->op_type != ndisc_info->op_type
-                || strcmp(ndisc_info->ifname, ndisc_info->ifname) != 0 || memcmp(ndisc_info->mac_addr, ndisc_info->mac_addr, ETHER_ADDR_LEN) != 0)
+                || strcmp(ndisc_info->ifname, ndisc_info->ifname) != 0
+                || memcmp(ndisc_info->mac_addr, ndisc_info->mac_addr, ETHER_ADDR_LEN) != 0)
             {
                 neigh_update = 1;
                 ndisc_info->op_type = ndisc_msg->op_type;
@@ -508,7 +510,10 @@ int do_one_neigh_request(struct nlmsghdr *n)
     ifm_parse_rtattr(tb, NDA_MAX, NDA_RTA(ndm), len);
 
     if (ndm->ndm_state == NUD_INCOMPLETE
-        || ndm->ndm_state == NUD_FAILED || ndm->ndm_state == NUD_NOARP || ndm->ndm_state == NUD_PERMANENT || ndm->ndm_state == NUD_NONE)
+        || ndm->ndm_state == NUD_FAILED
+        || ndm->ndm_state == NUD_NOARP
+        || ndm->ndm_state == NUD_PERMANENT
+        || ndm->ndm_state == NUD_NONE)
     {
         return (0);
     }
@@ -682,7 +687,8 @@ void do_arp_update_from_reply_packet(unsigned int ifindex, unsigned int addr, ui
 
         /* update ARP */
         if (arp_info->op_type != arp_msg->op_type
-            || strcmp(arp_info->ifname, arp_msg->ifname) != 0 || memcmp(arp_info->mac_addr, arp_msg->mac_addr, ETHER_ADDR_LEN) != 0)
+            || strcmp(arp_info->ifname, arp_msg->ifname) != 0
+            || memcmp(arp_info->mac_addr, arp_msg->mac_addr, ETHER_ADDR_LEN) != 0)
         {
             arp_info->op_type = arp_msg->op_type;
             sprintf(arp_info->ifname, "%s", arp_msg->ifname);
@@ -757,7 +763,8 @@ void do_ndisc_update_from_reply_packet(unsigned int ifindex, char *ipv6_addr, ui
     memcpy((char *)ndisc_msg->ipv6_addr, ipv6_addr, 16);
     memcpy(ndisc_msg->mac_addr, mac_addr, ETHER_ADDR_LEN);
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "nd ifindex [%d] (%s) ip %s mac %s", ifindex, ndisc_lif->name, show_ipv6_str(ipv6_addr), mac_str);
+    ICCPD_LOG_DEBUG(__FUNCTION__, "nd ifindex [%d] (%s) ip %s mac %s",
+                    ifindex, ndisc_lif->name, show_ipv6_str(ipv6_addr), mac_str);
 
     /* Find MLACP itf, member of port-channel */
     LIST_FOREACH(csm, &(sys->csm_list), next)
@@ -821,7 +828,8 @@ void do_ndisc_update_from_reply_packet(unsigned int ifindex, char *ipv6_addr, ui
 
         /* update ND */
         if (ndisc_info->op_type != ndisc_msg->op_type
-            || strcmp(ndisc_info->ifname, ndisc_msg->ifname) != 0 || memcmp(ndisc_info->mac_addr, ndisc_msg->mac_addr, ETHER_ADDR_LEN) != 0)
+            || strcmp(ndisc_info->ifname, ndisc_msg->ifname) != 0
+            || memcmp(ndisc_info->mac_addr, ndisc_msg->mac_addr, ETHER_ADDR_LEN) != 0)
         {
             ndisc_info->op_type = ndisc_msg->op_type;
             sprintf(ndisc_info->ifname, "%s", ndisc_msg->ifname);

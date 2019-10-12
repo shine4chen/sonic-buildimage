@@ -602,7 +602,9 @@ int scheduler_prepare_session(struct CSM *csm)
     }
     else if (local_ip == peer_ip)
     {
-        ICCPD_LOG_WARN("connect", "Sender IP is as the same as the peer IP. " "This must be fixed before connection is built.");
+        ICCPD_LOG_WARN("connect",
+                       "Sender IP is as the same as the peer IP. "
+                       "This must be fixed before connection is built.");
         goto time_update;
     }
 

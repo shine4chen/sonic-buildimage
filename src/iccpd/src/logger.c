@@ -113,8 +113,9 @@ void write_log(const int level, const char *tag, const char *format, ...)
     print_len = vsnprintf(buf + prefix_len, avbl_buf_len, format, args);
     va_end(args);
 
-    /* Since osal_vsnprintf doesn't always return the exact size written to the buffer, we must check if the user string length exceeds the remaing
-       buffer size. */
+    /* Since osal_vsnprintf doesn't always return the exact size written to the buffer,
+     * we must check if the user string length exceeds the remaing buffer size.
+     */
     if (print_len > avbl_buf_len)
     {
         print_len = avbl_buf_len;

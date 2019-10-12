@@ -119,8 +119,12 @@ int mlacp_fsm_arp_set(char *ifname, uint32_t ip, char *mac)
         char buf[256];
     } req =
     {
-    .n.nlmsg_len = NLMSG_LENGTH(sizeof(struct ndmsg)),.n.nlmsg_flags = NLM_F_REQUEST | NLM_F_CREATE | NLM_F_REPLACE,.n.nlmsg_type =
-            RTM_NEWNEIGH,.ndm.ndm_family = AF_INET,.ndm.ndm_state = NUD_REACHABLE,};
+        .n.nlmsg_len = NLMSG_LENGTH(sizeof(struct ndmsg)),
+        .n.nlmsg_flags = NLM_F_REQUEST|NLM_F_CREATE|NLM_F_REPLACE,
+        .n.nlmsg_type = RTM_NEWNEIGH,
+        .ndm.ndm_family = AF_INET,
+        .ndm.ndm_state = NUD_REACHABLE,
+    };
 
     ICCPD_LOG_DEBUG(__FUNCTION__, "Set arp entry for IP:%s  MAC:%s  ifname:%s", show_ip_str(htonl(ip)), mac, ifname);
 
@@ -174,8 +178,12 @@ int mlacp_fsm_arp_del(char *ifname, uint32_t ip)
         char buf[256];
     } req =
     {
-    .n.nlmsg_len = NLMSG_LENGTH(sizeof(struct ndmsg)),.n.nlmsg_flags = NLM_F_REQUEST,.n.nlmsg_type = RTM_DELNEIGH,.ndm.ndm_family =
-            AF_INET,.ndm.ndm_state = NUD_REACHABLE,};
+        .n.nlmsg_len = NLMSG_LENGTH(sizeof(struct ndmsg)),
+        .n.nlmsg_flags = NLM_F_REQUEST,
+        .n.nlmsg_type = RTM_DELNEIGH,
+        .ndm.ndm_family = AF_INET,
+        .ndm.ndm_state = NUD_REACHABLE,
+    };
 
     ICCPD_LOG_DEBUG(__FUNCTION__, "Del arp entry for IP: %s ifname:%s", show_ip_str(htonl(ip)), ifname);
 
@@ -222,8 +230,12 @@ int mlacp_fsm_ndisc_set(char *ifname, char *ipv6, char *mac)
         char buf[256];
     } req =
     {
-    .n.nlmsg_len = NLMSG_LENGTH(sizeof(struct ndmsg)),.n.nlmsg_flags = NLM_F_REQUEST | NLM_F_CREATE | NLM_F_REPLACE,.n.nlmsg_type =
-            RTM_NEWNEIGH,.ndm.ndm_family = AF_INET6,.ndm.ndm_state = NUD_REACHABLE,};
+        .n.nlmsg_len = NLMSG_LENGTH(sizeof(struct ndmsg)),
+        .n.nlmsg_flags = NLM_F_REQUEST|NLM_F_CREATE|NLM_F_REPLACE,
+        .n.nlmsg_type = RTM_NEWNEIGH,
+        .ndm.ndm_family = AF_INET6,
+        .ndm.ndm_state = NUD_REACHABLE,
+    };
 
     ICCPD_LOG_DEBUG(__FUNCTION__, "Set nd entry for IPv6:%s  MAC:%s  ifname:%s", show_ipv6_str(ipv6), mac, ifname);
 
@@ -278,8 +290,12 @@ int mlacp_fsm_ndisc_del(char *ifname, char *ipv6)
         char buf[256];
     } req =
     {
-    .n.nlmsg_len = NLMSG_LENGTH(sizeof(struct ndmsg)),.n.nlmsg_flags = NLM_F_REQUEST,.n.nlmsg_type = RTM_DELNEIGH,.ndm.ndm_family =
-            AF_INET6,.ndm.ndm_state = NUD_REACHABLE,};
+        .n.nlmsg_len = NLMSG_LENGTH(sizeof(struct ndmsg)),
+        .n.nlmsg_flags = NLM_F_REQUEST,
+        .n.nlmsg_type = RTM_DELNEIGH,
+        .ndm.ndm_family = AF_INET6,
+        .ndm.ndm_state = NUD_REACHABLE,
+    };
 
     ICCPD_LOG_DEBUG(__FUNCTION__, "Del nd entry for IPv6: %s ifname:%s", show_ip_str(ipv6), ifname);
 
@@ -350,7 +366,7 @@ add_arp:
         sprintf(mac_str, "%02x:%02x:%02x:%02x:%02x:%02x", arp_msg->mac_addr[0], arp_msg->mac_addr[1], arp_msg->mac_addr[2],
                 arp_msg->mac_addr[3], arp_msg->mac_addr[4], arp_msg->mac_addr[5]);
 
-        iccp_netlink_neighbor_request(AF_INET, &arp_msg->ipv4_addr, 1, arp_msg->mac_addr, arp_msg->ifname);
+        iccp_netlink_neighbor_request(AF_INET, (uint8_t *)&arp_msg->ipv4_addr, 1, arp_msg->mac_addr, arp_msg->ifname);
         ICCPD_LOG_DEBUG(__FUNCTION__, "Add dynamic ARP to kernel [%s]", show_ip_str(arp_msg->ipv4_addr));
     }
     goto done;
@@ -369,8 +385,8 @@ del_arp:
         if (arp_msg->op_type == NEIGH_SYNC_DEL)
             continue;
 
-        iccp_netlink_neighbor_request(AF_INET, &arp_msg->ipv4_addr, 0, arp_msg->mac_addr, arp_msg->ifname);
-        /* link broken, del all static arp on the lif */
+        iccp_netlink_neighbor_request(AF_INET, (uint8_t *)&arp_msg->ipv4_addr, 0, arp_msg->mac_addr, arp_msg->ifname);
+        /* link broken, del all dynamic arp on the lif */
         ICCPD_LOG_DEBUG(__FUNCTION__, "Del dynamic ARP [%s]", show_ip_str(arp_msg->ipv4_addr));
     }
 
@@ -406,7 +422,7 @@ add_ndisc:
         if (ndisc_msg->op_type == NEIGH_SYNC_DEL)
             continue;
 
-        /* find the ARP for lif_list */
+        /* find the ND for lif_list */
         if (strcmp(lif->name, ndisc_msg->ifname) != 0)
             continue;
 
@@ -434,7 +450,7 @@ del_ndisc:
 
         iccp_netlink_neighbor_request(AF_INET6, (uint8_t *)ndisc_msg->ipv6_addr, 1, ndisc_msg->mac_addr, ndisc_msg->ifname);
 
-        /* link broken, del all static arp on the lif */
+        /* link broken, del all dynamic ndisc on the lif */
         ICCPD_LOG_DEBUG(__FUNCTION__, "Del dynamic ND [%s]", show_ipv6_str((char *)ndisc_msg->ipv6_addr));
     }
 
@@ -777,7 +793,8 @@ static void set_peerlink_mlag_port_isolate(struct CSM *csm, struct LocalInterfac
     if (MLACP(csm).current_state != MLACP_STATE_EXCHANGE)
         return;
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "%s  port-isolate from %s to %s", enable ? "Enable" : "Disable", csm->peer_link_if->name, lif->name);
+    ICCPD_LOG_DEBUG(__FUNCTION__, "%s  port-isolate from %s to %s",
+                    enable ? "Enable" : "Disable", csm->peer_link_if->name, lif->name);
     update_peerlink_isolate_from_all_csm_lif(csm);
 
     /* Kernel also needs to block traffic from peerlink to mlag-port */
@@ -913,8 +930,11 @@ static void update_l2_po_state(struct CSM *csm, struct LocalInterface *lif, int 
     if (!csm || !lif)
         return;
 
-    /* L2 po */
-    /* if (po_state != lif->po_active && po_state == 0) { mlacp_clean_fdb(); } */
+    /*L2 po*/
+    /*if (po_state != lif->po_active && po_state == 0)
+       {
+        mlacp_clean_fdb();
+       }*/
 
     /* Is there any L3 vlan over L2 po? */
     LIST_FOREACH(vlan, &(lif->vlan_list), port_next)
@@ -930,7 +950,10 @@ static void update_l2_po_state(struct CSM *csm, struct LocalInterface *lif, int 
         if (!local_if_is_l3_mode(vlan->vlan_itf))
             continue;
 
-        /* NOTE assume only one mlag per vlan need to add rules for per mlag per vlan later (arp list?) */
+        /*NOTE
+         * assume only one mlag per vlan
+         * need to add rules for per mlag per vlan later (arp list?)
+         */
         set_l3_vlan_if = vlan->vlan_itf;
         if (po_state != lif->po_active || MLACP(csm).current_state != set_l3_vlan_if->mlacp_state)
         {
@@ -1104,7 +1127,10 @@ void update_stp_peer_link(struct CSM *csm, struct PeerInterface *pif, int po_sta
                 if (!local_if_is_l3_mode(vlan->vlan_itf))
                     continue;
 
-                /* NOTE assume only one mlag per bridge need to add rules for per mlag per bridge later (arp list?) */
+                /*NOTE
+                 * assume only one mlag per bridge
+                 * need to add rules for per mlag per bridge later (arp list?)
+                 */
                 if (po_state == 1 && lif->po_active == 0)
                     set_l3_itf_state(csm, vlan->vlan_itf, ROUTE_ADD);
                 else if (po_state == 0 && lif->po_active == 0)
@@ -1397,9 +1423,10 @@ static void mlacp_conn_handler_fdb(struct CSM *csm)
             /* Wait the ACK from peer? */
             /* mac_msg->age_flag &= ~MAC_AGE_PEER; */
 
-            /* If MAC with local age flag, dont sync to peer. Such MAC only exist when peer is warm-reboot. If peer is warm-reboot, peer age flag is
-               not set when connection is lost. When MAC is aged in local switch, this MAC is not deleted for no peer age flag. After warm-reboot,
-               this MAC must be learnt by peer and sync to local switch */
+            /*If MAC with local age flag, dont sync to peer. Such MAC only exist when peer is warm-reboot.
+              If peer is warm-reboot, peer age flag is not set when connection is lost.
+              When MAC is aged in local switch, this MAC is not deleted for no peer age flag.
+              After warm-reboot, this MAC must be learnt by peer and sync to local switch*/
             if (!(mac_msg->age_flag & MAC_AGE_LOCAL))
             {
                 /* Send mac add message to peer */
@@ -1531,7 +1558,8 @@ void mlacp_peer_disconn_handler(struct CSM *csm)
     {
         /* If peer disconnected, recover peer to normal reboot for next time */
         csm->peer_warm_reboot_time = 0;
-        /* peer connection must be establised again within 90s from last disconnection for peer warm reboot */
+        /*peer connection must be establised again within 90s
+           from last disconnection for peer warm reboot*/
         time(&csm->warm_reboot_disconn_time);
         ICCPD_LOG_DEBUG(__FUNCTION__, "Peer warm reboot and disconnect, recover to normal reboot for next time!");
         return;
@@ -1857,11 +1885,15 @@ void do_mac_update_from_syncd(char mac_str[ETHER_ADDR_STR_LEN], uint16_t vid, ch
             }
 
             /* If the current mac port is peer-link, it will handle by port up event */
-            /* if(strcmp(csm->peer_itf_name, mac_info->ifname) == 0) { return; } */
+            /*if(strcmp(csm->peer_itf_name, mac_info->ifname) == 0)
+               {
+                return;
+               }*/
 
             /* update MAC */
             if (mac_info->fdb_type != mac_msg->fdb_type
-                || strcmp(mac_info->ifname, mac_msg->ifname) != 0 || strcmp(mac_info->origin_ifname, mac_msg->ifname) != 0)
+                || strcmp(mac_info->ifname, mac_msg->ifname) != 0
+                || strcmp(mac_info->origin_ifname, mac_msg->ifname) != 0)
             {
                 mac_info->fdb_type = mac_msg->fdb_type;
                 sprintf(mac_info->ifname, "%s", mac_msg->ifname);
@@ -1883,7 +1915,8 @@ void do_mac_update_from_syncd(char mac_str[ETHER_ADDR_STR_LEN], uint16_t vid, ch
         }
         else    /* same MAC not exist */
         {
-            /* If the port the mac learn is change to down before the mac sync to iccp, this mac must be deleted */
+            /*If the port the mac learn is change to down before the mac
+               sync to iccp, this mac must be deleted */
             if (mac_lif->state == PORT_STATE_DOWN)
             {
                 del_mac_from_chip(mac_msg);
@@ -1893,8 +1926,8 @@ void do_mac_update_from_syncd(char mac_str[ETHER_ADDR_STR_LEN], uint16_t vid, ch
 
             /* set MAC_AGE_PEER flag before send this item to peer */
             mac_msg->age_flag |= MAC_AGE_PEER;
-            /* ICCPD_LOG_DEBUG(__FUNCTION__, "Add peer age flag: %s, add %s vlan-id %d, age_flag %d", mac_msg->ifname, mac_msg->mac_str,
-               mac_msg->vid, mac_msg->age_flag); */
+            /*ICCPD_LOG_DEBUG(__FUNCTION__, "Add peer age flag: %s, add %s vlan-id %d, age_flag %d",
+                            mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);*/
             mac_msg->op_type = MAC_SYNC_ADD;
 
             if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
@@ -1905,8 +1938,8 @@ void do_mac_update_from_syncd(char mac_str[ETHER_ADDR_STR_LEN], uint16_t vid, ch
                     mac_msg->age_flag &= ~MAC_AGE_PEER;
                     TAILQ_INSERT_TAIL(&(MLACP(csm).mac_msg_list), msg_send, tail);
 
-                    /* ICCPD_LOG_DEBUG(__FUNCTION__, "MAC-msg-list enqueue: %s, add %s vlan-id %d, age_flag %d", mac_msg->ifname, mac_msg->mac_str,
-                       mac_msg->vid, mac_msg->age_flag); */
+                    /*ICCPD_LOG_DEBUG(__FUNCTION__, "MAC-msg-list enqueue: %s, add %s vlan-id %d, age_flag %d",
+                                    mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);*/
                 }
                 else
                 {
@@ -1920,10 +1953,12 @@ void do_mac_update_from_syncd(char mac_str[ETHER_ADDR_STR_LEN], uint16_t vid, ch
             {
                 TAILQ_INSERT_TAIL(&(MLACP(csm).mac_list), msg, tail);
 
-                /* ICCPD_LOG_DEBUG(__FUNCTION__, "MAC-list enqueue: %s, add %s vlan-id %d", mac_msg->ifname, mac_msg->mac_str, mac_msg->vid); */
+                /*ICCPD_LOG_DEBUG(__FUNCTION__, "MAC-list enqueue: %s, add %s vlan-id %d",
+                                mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);*/
             }
             else
-                ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue MAC %s, add %s vlan-id %d", mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue MAC %s, add %s vlan-id %d",
+                                mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
         }
     }
     else        /* handle mac del */
@@ -1964,7 +1999,8 @@ void do_mac_update_from_syncd(char mac_str[ETHER_ADDR_STR_LEN], uint16_t vid, ch
 
             if (mac_info->age_flag == (MAC_AGE_LOCAL | MAC_AGE_PEER))
             {
-                ICCPD_LOG_DEBUG(__FUNCTION__, "Recv MAC del msg: %s, del %s vlan-id %d", mac_info->ifname, mac_info->mac_str, mac_info->vid);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "Recv MAC del msg: %s, del %s vlan-id %d",
+                                mac_info->ifname, mac_info->mac_str, mac_info->vid);
 
                 /* If local and peer both aged, del the mac (local orphan mac is here) */
                 TAILQ_REMOVE(&(MLACP(csm).mac_list), msg, tail);

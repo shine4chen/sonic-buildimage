@@ -26,12 +26,10 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include <netlink/netlink.h>
-
 #include <linux/types.h>
-
 #include "../include/system.h"
 #include "../include/port.h"
-#include <linux/icmpv6.h>
+#include <netinet/icmp6.h>
 #include <linux/ipv6.h>
 
 #define NDISC_NEIGHBOUR_ADVERTISEMENT	136
@@ -40,16 +38,16 @@
 
 struct nd_msg
 {
-    struct icmp6hdr icmph;
+    struct icmp6_hdr icmph;
     struct in6_addr target;
     __u8 opt[0];
 };
 
-struct nd_opt_hdr
+struct in6_pktinfo
 {
-    __u8 nd_opt_type;
-    __u8 nd_opt_len;
-} __packed;
+    struct in6_addr ipi6_addr;  /* src/dst IPv6 address */
+    unsigned int ipi6_ifindex;  /* send/recv interface index */
+};
 
 int iccp_get_port_member_list(struct LocalInterface *lif);
 void iccp_event_handler_obj_input_newlink(struct nl_object *obj, void *arg);

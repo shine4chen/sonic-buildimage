@@ -213,7 +213,8 @@ int main(int argc, char *argv[])
     if (getuid() != 0)
     {
         fprintf(stderr,
-                "This program needs root permission to do device manipulation. " "Please use sudo to execute it or change your user to root.\n");
+                "This program needs root permission to do device manipulation. "
+                "Please use sudo to execute it or change your user to root.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -240,7 +241,8 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    /* if(!parser.console_log) init_daemon(parser.pid_file_path, pid_file_fd); */
+    /*if(!parser.console_log)
+        init_daemon(parser.pid_file_path, pid_file_fd);*/
 
     log_init(&parser);
 
@@ -262,7 +264,8 @@ int main(int argc, char *argv[])
     scheduler_init();
     scheduler_start();
     system_finalize();
-    /* scheduler_finalize(); log_finalize(); */
+    /*scheduler_finalize();
+       log_finalize();*/
 
     return EXIT_SUCCESS;
 }

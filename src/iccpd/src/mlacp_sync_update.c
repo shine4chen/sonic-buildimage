@@ -43,7 +43,8 @@ int mlacp_fsm_update_system_conf(struct CSM *csm, mLACPSysConfigTLV * sysconf)
 {
     struct LocalInterface *lif = NULL;
 
-    /* NOTE a little tricky, we change the NodeID local side if collision happened first time */
+    /*NOTE
+       a little tricky, we change the NodeID local side if collision happened first time*/
     if (sysconf->node_id == MLACP(csm).node_id)
         MLACP(csm).node_id++;
 
@@ -212,7 +213,7 @@ int mlacp_fsm_update_mac_entry_from_peer(struct CSM *csm, struct mLACPMACData *M
                             if (strcmp(mac_msg->ifname, csm->peer_itf_name) == 0)
                             {
                                 /* This MAC is already point to peer-link */
-                                return;
+                                return 0;
                             }
 
                             if (csm->peer_link_if && csm->peer_link_if->state == PORT_STATE_UP)
@@ -531,7 +532,7 @@ int mlacp_fsm_update_arp_entry(struct CSM *csm, struct ARPMsg *arp_entry)
     {
         if (arp_entry->op_type == NEIGH_SYNC_ADD)
         {
-            if (iccp_netlink_neighbor_request(AF_INET, &arp_entry->ipv4_addr, 1, arp_entry->mac_addr, arp_entry->ifname) < 0)
+            if (iccp_netlink_neighbor_request(AF_INET, (uint8_t *)&arp_entry->ipv4_addr, 1, arp_entry->mac_addr, arp_entry->ifname) < 0)
             {
                 ICCPD_LOG_DEBUG(__FUNCTION__, "ARP add failure for %s %s %s", arp_entry->ifname, show_ip_str(arp_entry->ipv4_addr), mac_str);
                 return MCLAG_ERROR;
@@ -539,7 +540,7 @@ int mlacp_fsm_update_arp_entry(struct CSM *csm, struct ARPMsg *arp_entry)
         }
         else
         {
-            if (iccp_netlink_neighbor_request(AF_INET, &arp_entry->ipv4_addr, 0, arp_entry->mac_addr, arp_entry->ifname) < 0)
+            if (iccp_netlink_neighbor_request(AF_INET, (uint8_t *)&arp_entry->ipv4_addr, 0, arp_entry->mac_addr, arp_entry->ifname) < 0)
             {
                 ICCPD_LOG_DEBUG(__FUNCTION__, "ARP delete failure for %s %s %s", arp_entry->ifname, show_ip_str(arp_entry->ipv4_addr), mac_str);
                 return MCLAG_ERROR;
