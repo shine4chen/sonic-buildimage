@@ -59,5 +59,6 @@ int iccp_handle_events(struct System *sys);
 void update_if_ipmac_on_standby(struct LocalInterface *lif_po);
 int iccp_sys_local_if_list_get_addr();
 int iccp_netlink_neighbor_request(int family, uint8_t *addr, int add, uint8_t *mac, char *portname);
+int iccp_check_if_addr_from_netlink(int family, uint8_t *addr, struct LocalInterface *lif);
 
 #endif

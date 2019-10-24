@@ -145,8 +145,8 @@ static void do_arp_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], int
 
     arp_msg->ipv4_addr = arp_msg->ipv4_addr;
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "arp type %s, state (%04X)(%d) ifindex [%d] (%s) ip %s, mac [%02X:%02X:%02X:%02X:%02X:%02X]",
-                    msgtype == RTM_NEWNEIGH ? "New" : "Del", ndm->ndm_state, fwd_neigh_state_valid(ndm->ndm_state),
+    ICCPD_LOG_DEBUG(__FUNCTION__, "ARP type %s, state (%04X)(%d) ifindex [%d] (%s) ip %s, mac [%02X:%02X:%02X:%02X:%02X:%02X]",
+                    msgtype == RTM_NEWNEIGH ? "New":"Del", ndm->ndm_state, fwd_neigh_state_valid(ndm->ndm_state),
                     ndm->ndm_ifindex, arp_lif->name,
                     show_ip_str(arp_msg->ipv4_addr),
                     arp_msg->mac_addr[0], arp_msg->mac_addr[1], arp_msg->mac_addr[2], arp_msg->mac_addr[3], arp_msg->mac_addr[4],
@@ -173,7 +173,8 @@ static void do_arp_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], int
                 if (!vlan_id_list)
                     continue;
 
-                ICCPD_LOG_DEBUG(__FUNCTION__, "ARP is from intf %s of vlan %s", lif_po->name, vlan_id_list->vlan_itf->name);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "ARP is from mclag enabled member port of vlan %s",
+                                vlan_id_list->vlan_itf->name);
             }
             else
             {
@@ -181,7 +182,7 @@ static void do_arp_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], int
                 if (ndm->ndm_ifindex != lif_po->ifindex)
                     continue;
 
-                ICCPD_LOG_DEBUG(__FUNCTION__, "ARP is from intf %s", lif_po->name);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "ARP is from mclag enabled intf %s", lif_po->name);
             }
 
             verify_arp = 1;
@@ -246,7 +247,7 @@ static void do_arp_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], int
                 /* ICCPD_LOG_DEBUG(__FUNCTION__, "ARP-list enqueue: %s, add %s", arp_msg->ifname, show_ip_str(arp_msg->ipv4_addr)); */
             }
             else
-                ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue ARP-list: %s, add %s", arp_msg->ifname, show_ip_str(arp_msg->ipv4_addr));
+                ICCPD_LOG_WARN(__FUNCTION__, "Failed to enqueue ARP-list: %s, add %s", arp_msg->ifname, show_ip_str(arp_msg->ipv4_addr));
         }
 
         /* enqueue iccp_msg (add) */
@@ -259,7 +260,7 @@ static void do_arp_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], int
                 /* ICCPD_LOG_DEBUG(__FUNCTION__, "Enqueue ARP[ADD] message for %s", show_ip_str(arp_msg->ipv4_addr)); */
             }
             else
-                ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue ARP[ADD] message for %s", show_ip_str(arp_msg->ipv4_addr));
+                ICCPD_LOG_WARN(__FUNCTION__, "Failed to enqueue ARP[ADD] message for %s", show_ip_str(arp_msg->ipv4_addr));
 
         }
     }
@@ -275,7 +276,7 @@ static void do_arp_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], int
                 /* ICCPD_LOG_DEBUG(__FUNCTION__, "Enqueue ARP[DEL] message for %s", show_ip_str(arp_msg->ipv4_addr)); */
             }
             else
-                ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue ARP[DEL] message for %s", show_ip_str(arp_msg->ipv4_addr));
+                ICCPD_LOG_WARN(__FUNCTION__, "Failed to enqueue ARP[DEL] message for %s", show_ip_str(arp_msg->ipv4_addr));
 
         }
     }
@@ -346,7 +347,7 @@ static void do_ndisc_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], i
                 if (!vlan_id_list)
                     continue;
 
-                ICCPD_LOG_DEBUG(__FUNCTION__, "neighor is from intf %s of vlan %s", lif_po->name, vlan_id_list->vlan_itf->name);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "ND is from mclag enabled member port of vlan %s", vlan_id_list->vlan_itf->name);
             }
             else
             {
@@ -354,7 +355,7 @@ static void do_ndisc_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], i
                 if (ndm->ndm_ifindex != lif_po->ifindex)
                     continue;
 
-                ICCPD_LOG_DEBUG(__FUNCTION__, "neighbor is from intf %s", lif_po->name);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "ND is from mclag enabled intf %s", lif_po->name);
             }
 
             verify_neigh = 1;
@@ -509,11 +510,12 @@ int do_one_neigh_request(struct nlmsghdr *n)
 
     ifm_parse_rtattr(tb, NDA_MAX, NDA_RTA(ndm), len);
 
-    if (ndm->ndm_state == NUD_INCOMPLETE
+    if (n->nlmsg_type == RTM_NEWNEIGH
+		&& (ndm->ndm_state == NUD_INCOMPLETE
         || ndm->ndm_state == NUD_FAILED
         || ndm->ndm_state == NUD_NOARP
         || ndm->ndm_state == NUD_PERMANENT
-        || ndm->ndm_state == NUD_NONE)
+        || ndm->ndm_state == NUD_NONE))
     {
         return (0);
     }
@@ -565,7 +567,7 @@ int iccp_neigh_get_init()
         ret = nl_send_simple(sys->route_sock, RTM_GETNEIGH, NLM_F_DUMP, &rt_hdr, sizeof(rt_hdr));
         if (ret < 0)
         {
-            ICCPD_LOG_ERR(__FUNCTION__, "send netlink msg error.");
+            ICCPD_LOG_ERR(__FUNCTION__, "Send netlink msg error.");
             return ret;
         }
 
@@ -584,7 +586,7 @@ int iccp_neigh_get_init()
         nl_cb_put(cb);
         if (ret < 0)
         {
-            ICCPD_LOG_ERR(__FUNCTION__, "receive netlink msg error.");
+            ICCPD_LOG_ERR(__FUNCTION__, "Receive netlink msg error.");
             if (ret != -NLE_DUMP_INTR)
                 return ret;
 
@@ -628,7 +630,7 @@ void do_arp_update_from_reply_packet(unsigned int ifindex, unsigned int addr, ui
     memcpy(&arp_msg->ipv4_addr, &addr, 4);
     memcpy(arp_msg->mac_addr, mac_addr, 6);
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "arp ifindex [%d] (%s) ip %s mac [%02X:%02X:%02X:%02X:%02X:%02X]",
+    ICCPD_LOG_DEBUG(__FUNCTION__, "ARP ifindex [%d] (%s) ip %s mac [%02X:%02X:%02X:%02X:%02X:%02X]",
                     ifindex, arp_lif->name,
                     show_ip_str(arp_msg->ipv4_addr),
                     arp_msg->mac_addr[0], arp_msg->mac_addr[1], arp_msg->mac_addr[2], arp_msg->mac_addr[3], arp_msg->mac_addr[4],
@@ -654,14 +656,15 @@ void do_arp_update_from_reply_packet(unsigned int ifindex, unsigned int addr, ui
 
                 if (!vlan_id_list)
                     continue;
-                ICCPD_LOG_DEBUG(__FUNCTION__, "ARP is from intf %s of vlan %s", lif_po->name, vlan_id_list->vlan_itf->name);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "ARP is from mclag enabled port %s of vlan %s",
+                                              lif_po->name, vlan_id_list->vlan_itf->name);
             }
             else
             {
                 /* Is the ARP belong to a L3 mode MLAG itf? */
                 if (ifindex != lif_po->ifindex)
                     continue;
-                ICCPD_LOG_DEBUG(__FUNCTION__, "ARP is from intf %s", lif_po->name);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "ARP is from mclag enabled intf %s", lif_po->name);
             }
 
             verify_arp = 1;
@@ -678,7 +681,14 @@ void do_arp_update_from_reply_packet(unsigned int ifindex, unsigned int addr, ui
     if (!verify_arp)
         return;
 
-    /* update lif ARP */
+    if (iccp_check_if_addr_from_netlink(AF_INET, &addr, arp_lif))
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__, "ARP %s is identical with the ip address of interface %s",
+                                      show_ip_str(arp_msg->ipv4_addr), arp_lif->name);
+        return;
+    }
+
+    /* update lif ARP*/
     TAILQ_FOREACH(msg, &MLACP(csm).arp_list, tail)
     {
         arp_info = (struct ARPMsg *)msg->buf;
@@ -708,7 +718,7 @@ void do_arp_update_from_reply_packet(unsigned int ifindex, unsigned int addr, ui
             /* ICCPD_LOG_DEBUG(__FUNCTION__, "ARP-list enqueue: %s, add %s", arp_msg->ifname, show_ip_str(arp_msg->ipv4_addr)); */
         }
         else
-            ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue ARP-list: %s, add %s", arp_msg->ifname, show_ip_str(arp_msg->ipv4_addr));
+            ICCPD_LOG_WARN(__FUNCTION__, "Failed to enqueue ARP-list: %s, add %s", arp_msg->ifname, show_ip_str(arp_msg->ipv4_addr));
     }
 
     /* enqueue iccp_msg (add) */
@@ -721,7 +731,7 @@ void do_arp_update_from_reply_packet(unsigned int ifindex, unsigned int addr, ui
             /* ICCPD_LOG_DEBUG(__FUNCTION__, "Enqueue ARP[ADD] for %s", show_ip_str(arp_msg->ipv4_addr)); */
         }
         else
-            ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue ARP[ADD] message for %s", show_ip_str(arp_msg->ipv4_addr));
+            ICCPD_LOG_WARN(__FUNCTION__, "Failed to enqueue ARP[ADD] message for %s", show_ip_str(arp_msg->ipv4_addr));
     }
 
     return;
@@ -786,14 +796,14 @@ void do_ndisc_update_from_reply_packet(unsigned int ifindex, char *ipv6_addr, ui
 
                 if (!vlan_id_list)
                     continue;
-                ICCPD_LOG_DEBUG(__FUNCTION__, "ND is from intf %s of vlan %s", lif_po->name, vlan_id_list->vlan_itf->name);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "ND is from mclag enabled port %s of vlan %s", lif_po->name, vlan_id_list->vlan_itf->name);
             }
             else
             {
                 /* Is the ND belong to a L3 mode MLAG itf? */
                 if (ifindex != lif_po->ifindex)
                     continue;
-                ICCPD_LOG_DEBUG(__FUNCTION__, "ND is from intf %s", lif_po->name);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "ND is from mclag enabled port %s", lif_po->name);
             }
 
             verify_ndisc = 1;
@@ -809,6 +819,13 @@ void do_ndisc_update_from_reply_packet(unsigned int ifindex, char *ipv6_addr, ui
         return;
     if (!verify_ndisc)
         return;
+
+    if (iccp_check_if_addr_from_netlink(AF_INET6, ndisc_msg->ipv6_addr, ndisc_lif))
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__, "NA %s is identical with the ipv6 address of interface %s",
+                                      show_ipv6_str((char *)ndisc_msg->ipv6_addr), ndisc_lif->name);
+        return;
+    }
 
     /* update lif ND */
     TAILQ_FOREACH(msg, &MLACP(csm).ndisc_list, tail)
@@ -834,7 +851,7 @@ void do_ndisc_update_from_reply_packet(unsigned int ifindex, char *ipv6_addr, ui
             ndisc_info->op_type = ndisc_msg->op_type;
             sprintf(ndisc_info->ifname, "%s", ndisc_msg->ifname);
             memcpy(ndisc_info->mac_addr, ndisc_msg->mac_addr, ETHER_ADDR_LEN);
-            /* ICCPD_LOG_DEBUG(__FUNCTION__, "Update ND for %s", show_ipv6_str((char *)ndisc_msg->ipv6_addr)); */
+            ICCPD_LOG_DEBUG(__FUNCTION__, "Update ND for %s", show_ipv6_str((char *)ndisc_msg->ipv6_addr));
         }
         break;
     }
@@ -855,12 +872,12 @@ void do_ndisc_update_from_reply_packet(unsigned int ifindex, char *ipv6_addr, ui
             /* ICCPD_LOG_DEBUG(__FUNCTION__, "NDISC-list enqueue: %s, add %s", ndisc_msg->ifname, show_ipv6_str((char *)ndisc_msg->ipv6_addr)); */
         }
         else
-            ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue NDISC-list: %s, add %s", ndisc_msg->ifname, show_ipv6_str((char *)ndisc_msg->ipv6_addr));
+            ICCPD_LOG_WARN(__FUNCTION__, "Failed to enqueue NDISC-list: %s, add %s", ndisc_msg->ifname, show_ipv6_str((char *)ndisc_msg->ipv6_addr));
     }
 
     if (iccp_netlink_neighbor_request(AF_INET6, (uint8_t *)ndisc_msg->ipv6_addr, 1, ndisc_msg->mac_addr, ndisc_msg->ifname) < 0)
     {
-        ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to add nd entry(%s, %s, %s) to kernel",
+        ICCPD_LOG_WARN(__FUNCTION__, "Failed to add ND entry(%s, %s, %s) to kernel",
                         ndisc_msg->ifname, show_ipv6_str((char *)ndisc_msg->ipv6_addr), mac_str);
         return;
     }
@@ -875,7 +892,7 @@ void do_ndisc_update_from_reply_packet(unsigned int ifindex, char *ipv6_addr, ui
             /* ICCPD_LOG_DEBUG(__FUNCTION__, "Enqueue ND[ADD] for %s", show_ipv6_str((char *)ndisc_msg->ipv6_addr)); */
         }
         else
-            ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue ND[ADD] message for %s", show_ipv6_str((char *)ndisc_msg->ipv6_addr));
+            ICCPD_LOG_WARN(__FUNCTION__, "Failed to enqueue ND[ADD] message for %s", show_ipv6_str((char *)ndisc_msg->ipv6_addr));
     }
 
     return;
@@ -890,7 +907,6 @@ void iccp_from_netlink_port_state_handler(char *ifname, int state)
 
     if ((sys = system_get_instance()) == NULL)
     {
-        ICCPD_LOG_WARN(__FUNCTION__, "Failed to obtain System instance.");
         return;
     }
 
@@ -959,7 +975,7 @@ void iccp_parse_if_vlan_info_from_netlink(struct nlmsghdr *n)
             /* if AF_SPEC isn't there, vlan table is not preset for this port */
             if (!tb[IFLA_AF_SPEC])
             {
-                ICCPD_LOG_WARN(__FUNCTION__, "%d   None\n", (ifm->ifi_index));
+                ICCPD_LOG_WARN(__FUNCTION__, "Vlan table is not preset for %d", ifm->ifi_index);
                 return;
             }
             else
@@ -991,7 +1007,7 @@ void iccp_parse_if_vlan_info_from_netlink(struct nlmsghdr *n)
                 {
                     if (vlan->vlan_removed == 1)
                     {
-                        ICCPD_LOG_DEBUG(__FUNCTION__, "Delete VLAN ID = %d from %s", vlan->vid, lif->name);
+                        ICCPD_LOG_DEBUG(__FUNCTION__, "Remove %s from VLAN %d", lif->name, vlan->vid);
 
                         LIST_REMOVE(vlan, port_next);
                         free(vlan);

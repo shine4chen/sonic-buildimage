@@ -505,12 +505,12 @@ int mlacp_prepare_for_port_channel_info(struct CSM *csm, char *buf, size_t max_b
             tlv->vlanData[num_of_vlan_id].vlan_id = htons(vlan_id->vid);
 
             num_of_vlan_id++;
-            ICCPD_LOG_DEBUG(__FUNCTION__, "  port channel %d: addr = %s vlan id %d     num %d ", port_channel->po_id, show_ip_str(tlv->ipv4_addr),
+            ICCPD_LOG_DEBUG(__FUNCTION__, "PortChannel%d: ipv4 addr = %s vlan id %d     num %d ", port_channel->po_id, show_ip_str(tlv->ipv4_addr),
                             vlan_id->vid, num_of_vlan_id);
         }
     }
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "  port channel %d: addr = %s  l3 mode %d", port_channel->po_id, show_ip_str(tlv->ipv4_addr), tlv->l3_mode);
+    ICCPD_LOG_DEBUG(__FUNCTION__, "PortChannel%d: ipv4 addr = %s  l3 mode %d", port_channel->po_id, show_ip_str(tlv->ipv4_addr), tlv->l3_mode);
 
     return msg_len;
 }
@@ -559,7 +559,7 @@ int mlacp_prepare_for_port_peerlink_info(struct CSM *csm, char *buf, size_t max_
     memcpy(tlv->if_name, peerlink_port->name, MAX_L_PORT_NAME);
     tlv->port_type = peerlink_port->type;
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "  peerlink port info  portname %s  type  = %d", tlv->if_name, tlv->port_type);
+    ICCPD_LOG_DEBUG(__FUNCTION__, "Peerlink port is %s, type = %d", tlv->if_name, tlv->port_type);
 
     return msg_len;
 }
