@@ -274,6 +274,7 @@ int mclagdctl_parse_dump_state(char *msg, int data_len)
 
         fprintf(stdout, "%s: %s\n", "MCLAG Interface", state_info->enabled_po);
 
+        fprintf(stdout, "%s: %s\n", "Loglevel", state_info->loglevel);
     }
 
     return 0;
@@ -599,9 +600,9 @@ int mclagdctl_parse_config_loglevel(char *msg, int data_len)
     int ret = *(int*)msg;
 
     if (ret == 0)
-    fprintf(stdout, "%s\n", "Set mclag config debug level success!");
-    else 
-    fprintf(stdout, "%s\n", "Set mclag config debug level failed!");
+        fprintf(stdout, "%s\n", "Config loglevel success!");
+    else
+        fprintf(stdout, "%s\n", "Config loglevel failed!");
 
     return 0;
 }
@@ -760,7 +761,7 @@ int main(int argc, char **argv)
     char *data;
     struct mclagd_reply_hdr *reply;
 
-    while ((opt = getopt_long(argc, argv, "hil:", long_options, NULL)) >= 0)
+    while ((opt = getopt_long(argc, argv, "hi:l:", long_options, NULL)) >= 0)
     {
         switch (opt)
         {
