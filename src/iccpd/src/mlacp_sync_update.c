@@ -164,7 +164,7 @@ int mlacp_fsm_update_mac_entry_from_peer(struct CSM *csm, struct mLACPMACData *M
     struct LocalInterface *local_if = NULL;
     uint8_t from_mclag_intf = 0;        /* 0: orphan port, 1: MCLAG port */
 
-    ICCPD_LOG_INFO(__FUNCTION__,
+    ICCPD_LOG_NOTICE(__FUNCTION__,
                    "Received MAC Info, port[%s] vid[%d] MAC[%s] type[%s]",
                    MacData->ifname, ntohs(MacData->vid), MacData->mac_str, MacData->type == MAC_SYNC_ADD ? "add" : "del");
 
@@ -310,7 +310,7 @@ int mlacp_fsm_update_mac_entry_from_peer(struct CSM *csm, struct mLACPMACData *M
 
             if (strlen(csm->peer_itf_name) == 0)
             {
-                ICCPD_LOG_DEBUG(__FUNCTION__, "From orphan port or portchannel is down, but peer-link is not configured: ifname %s, MAC %s vlan-id %d",
+                ICCPD_LOG_NOTICE(__FUNCTION__, "From orphan port or portchannel is down, but peer-link is not configured: ifname %s, MAC %s vlan-id %d",
                                 mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
 
                 /* if orphan port mac but no peerlink, don't keep this mac */
@@ -322,7 +322,7 @@ int mlacp_fsm_update_mac_entry_from_peer(struct CSM *csm, struct mLACPMACData *M
                 /* Redirect the mac to peer-link */
                 memcpy(&mac_msg->ifname, csm->peer_itf_name, IFNAMSIZ);
 
-                ICCPD_LOG_DEBUG(__FUNCTION__, "Redirect to peerlink for orphan port or portchannel is down, Add local age flag: %d  ifname %s, MAC %s vlan-id %d",
+                ICCPD_LOG_NOTICE(__FUNCTION__, "Redirect to peerlink for orphan port or portchannel is down, Add local age flag: %d  ifname %s, MAC %s vlan-id %d",
                                 mac_msg->age_flag, mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
             }
         }
@@ -442,7 +442,7 @@ int mlacp_fsm_update_arp_entry(struct CSM *csm, struct ARPMsg *arp_entry)
     sprintf(mac_str, "%02x:%02x:%02x:%02x:%02x:%02x", arp_entry->mac_addr[0], arp_entry->mac_addr[1], arp_entry->mac_addr[2],
             arp_entry->mac_addr[3], arp_entry->mac_addr[4], arp_entry->mac_addr[5]);
 
-    ICCPD_LOG_INFO(__FUNCTION__,
+    ICCPD_LOG_NOTICE(__FUNCTION__,
                    "Received ARP Info, intf[%s] IP[%s], MAC[%02x:%02x:%02x:%02x:%02x:%02x]",
                    arp_entry->ifname, show_ip_str(arp_entry->ipv4_addr),
                    arp_entry->mac_addr[0], arp_entry->mac_addr[1], arp_entry->mac_addr[2],
@@ -554,7 +554,7 @@ int mlacp_fsm_update_arp_entry(struct CSM *csm, struct ARPMsg *arp_entry)
     }
     else
     {
-        ICCPD_LOG_DEBUG(__FUNCTION__, "Failure: port-channel is not alive");
+        ICCPD_LOG_NOTICE(__FUNCTION__, "Failure: port-channel is not alive");
         /* TODO Set static route through peer-link or just skip it? */
     }
 
@@ -654,7 +654,7 @@ int mlacp_fsm_update_ndisc_entry(struct CSM *csm, struct NDISCMsg *ndisc_entry)
     sprintf(mac_str, "%02x:%02x:%02x:%02x:%02x:%02x", ndisc_entry->mac_addr[0], ndisc_entry->mac_addr[1], ndisc_entry->mac_addr[2],
             ndisc_entry->mac_addr[3], ndisc_entry->mac_addr[4], ndisc_entry->mac_addr[5]);
 
-    ICCPD_LOG_INFO(__FUNCTION__,
+    ICCPD_LOG_NOTICE(__FUNCTION__,
                    "Received ND Info, intf[%s] IP[%s], MAC[%s]", ndisc_entry->ifname, show_ipv6_str((char *)ndisc_entry->ipv6_addr), mac_str);
 
     if (strncmp(ndisc_entry->ifname, "Vlan", 4) == 0)
@@ -905,10 +905,10 @@ int mlacp_fsm_update_peerlink_info(struct CSM *csm, struct mLACPPeerLinkInfoTLV 
     }
 
     if (csm->peer_link_if->type != tlv->port_type)
-        ICCPD_LOG_DEBUG(__FUNCTION__, "Peerlink port type of peer %d is not same with local %d !", tlv->port_type, csm->peer_link_if->type);
+        ICCPD_LOG_NOTICE(__FUNCTION__, "Peerlink port type of peer %d is not same with local %d !", tlv->port_type, csm->peer_link_if->type);
 
     if (tlv->port_type == IF_T_VXLAN && strncmp(csm->peer_itf_name, tlv->if_name, strlen(csm->peer_itf_name)))
-        ICCPD_LOG_DEBUG(__FUNCTION__, "Peerlink port is vxlan port, but peerlink port of peer %s is not same with local %s !",
+        ICCPD_LOG_NOTICE(__FUNCTION__, "Peerlink port is vxlan port, but peerlink port of peer %s is not same with local %s !",
                         tlv->if_name, csm->peer_itf_name);
 
     return 0;
@@ -936,7 +936,7 @@ int mlacp_fsm_update_warmboot(struct CSM *csm, struct mLACPWarmbootTLV *tlv)
         return MCLAG_ERROR;
 
     time(&csm->peer_warm_reboot_time);
-    ICCPD_LOG_DEBUG(__FUNCTION__, "Receive warm reboot notification from peer!");
+    ICCPD_LOG_NOTICE(__FUNCTION__, "Receive warm reboot notification from peer!");
 
     return 0;
 }

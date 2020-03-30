@@ -387,7 +387,7 @@ static void mlacp_sync_recv_sysConf(struct CSM *csm, struct Msg *msg)
     if (mlacp_fsm_update_system_conf(csm, sysconf) == MCLAG_ERROR)
     {
         /*NOTE: we just change the node ID local side without sending NAK msg*/
-        ICCPD_LOG_DEBUG(__FUNCTION__, "Same Node ID = %d, send NAK", MLACP(csm).remote_system.node_id);
+        ICCPD_LOG_WARN(__FUNCTION__, "Same Node ID = %d, send NAK", MLACP(csm).remote_system.node_id);
         mlacp_sync_send_nak_handler(csm, msg);
     }
 

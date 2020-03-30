@@ -483,7 +483,7 @@ void iccp_set_interface_ipadd_mac(struct LocalInterface *lif, char *mac_addr)
     dst_len = strlen(mac_addr);
     memcpy(sub_msg->data, mac_addr, dst_len);
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "If name %s ip %s mac %s", lif->name, show_ip_str(htonl(lif->ipv4_addr)), sub_msg->data);
+    ICCPD_LOG_NOTICE(__FUNCTION__, "If name %s ip %s mac %s", lif->name, show_ip_str(htonl(lif->ipv4_addr)), sub_msg->data);
 
     sub_msg->op_len = dst_len;
     msg_hdr->len += sizeof(mclag_sub_option_hdr_t);
@@ -573,7 +573,7 @@ void update_if_ipmac_on_standby(struct LocalInterface *lif_po)
         /* Backup old sysmac */
         memcpy(lif_po->mac_addr_ori, lif_po->mac_addr, ETHER_ADDR_LEN);
 
-        ICCPD_LOG_DEBUG(__FUNCTION__,
+        ICCPD_LOG_NOTICE(__FUNCTION__,
                         "%s Change the system-id of %s from [%02X:%02X:%02X:%02X:%02X:%02X] to [%02X:%02X:%02X:%02X:%02X:%02X].",
                         (csm->role_type == STP_ROLE_STANDBY) ? "Standby" : "Active",
                         lif_po->name, lif_po->mac_addr[0], lif_po->mac_addr[1], lif_po->mac_addr[2], lif_po->mac_addr[3], lif_po->mac_addr[4],
@@ -659,7 +659,7 @@ void recover_if_ipmac_on_standby(struct LocalInterface *lif_po)
     /* Recover mac to origin mac, it is the 'mac' value in 'localhost' currently */
     if (memcmp(lif_po->mac_addr, MLACP(csm).system_id, ETHER_ADDR_LEN) != 0)
     {
-        ICCPD_LOG_DEBUG(__FUNCTION__,
+        ICCPD_LOG_NOTICE(__FUNCTION__,
                         "%s Recover the system-id of %s from [%02X:%02X:%02X:%02X:%02X:%02X] to [%02X:%02X:%02X:%02X:%02X:%02X].",
                         (csm->role_type == STP_ROLE_STANDBY) ? "Standby" : "Active",
                         lif_po->name, lif_po->mac_addr[0], lif_po->mac_addr[1], lif_po->mac_addr[2], lif_po->mac_addr[3], lif_po->mac_addr[4],
@@ -741,7 +741,7 @@ int iccp_netlink_neighbor_request(int family, uint8_t *addr, int add, uint8_t *m
 
     sprintf(mac_str, "%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "Notify kernel %s %s entry(ip:%s, mac:%s, intf:%s)",
+    ICCPD_LOG_NOTICE(__FUNCTION__, "Notify kernel %s %s entry(ip:%s, mac:%s, intf:%s)",
                    add ? "add" : "del", (family == AF_INET) ? "ARP" : "ND",
                    (family == AF_INET) ? show_ip_str(*((int *)addr)) : show_ipv6_str(addr), mac_str, portname);
 
@@ -882,7 +882,7 @@ void iccp_event_handler_obj_input_newlink(struct nl_object *obj, void *arg)
         {
             lif->state = PORT_STATE_DOWN;
             /* if(lif->type ==IF_T_PORT_CHANNEL) */
-            ICCPD_LOG_INFO(__FUNCTION__, "update local port %s state down", ifname);
+            ICCPD_LOG_NOTICE(__FUNCTION__, "Update local port %s state down", ifname);
 
             iccp_from_netlink_port_state_handler(lif->name, lif->state);
         }

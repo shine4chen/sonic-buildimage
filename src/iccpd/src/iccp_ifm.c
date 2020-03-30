@@ -145,7 +145,7 @@ static void do_arp_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], int
 
     arp_msg->ipv4_addr = arp_msg->ipv4_addr;
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "ARP type %s, state (%04X)(%d) ifindex [%d] (%s) ip %s, mac [%02X:%02X:%02X:%02X:%02X:%02X]",
+    ICCPD_LOG_NOTICE(__FUNCTION__, "ARP type %s, state (%04X)(%d) ifindex [%d] (%s) ip %s, mac [%02X:%02X:%02X:%02X:%02X:%02X]",
                     msgtype == RTM_NEWNEIGH ? "New":"Del", ndm->ndm_state, fwd_neigh_state_valid(ndm->ndm_state),
                     ndm->ndm_ifindex, arp_lif->name,
                     show_ip_str(arp_msg->ipv4_addr),
@@ -319,7 +319,7 @@ static void do_ndisc_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], i
     if (tb[NDA_LLADDR])
         memcpy(ndisc_msg->mac_addr, RTA_DATA(tb[NDA_LLADDR]), RTA_PAYLOAD(tb[NDA_LLADDR]));
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "ndisc type %s, state (%04X)(%d), ifindex [%d] (%s), ip %s, mac [%02X:%02X:%02X:%02X:%02X:%02X]",
+    ICCPD_LOG_NOTICE(__FUNCTION__, "ndisc type %s, state (%04X)(%d), ifindex [%d] (%s), ip %s, mac [%02X:%02X:%02X:%02X:%02X:%02X]",
                     msgtype == RTM_NEWNEIGH ? "New" : "Del", ndm->ndm_state, fwd_neigh_state_valid(ndm->ndm_state),
                     ndm->ndm_ifindex, ndisc_lif->name,
                     show_ipv6_str((char *)ndisc_msg->ipv6_addr),
@@ -703,7 +703,9 @@ void do_arp_update_from_reply_packet(unsigned int ifindex, unsigned int addr, ui
             arp_info->op_type = arp_msg->op_type;
             sprintf(arp_info->ifname, "%s", arp_msg->ifname);
             memcpy(arp_info->mac_addr, arp_msg->mac_addr, ETHER_ADDR_LEN);
-            ICCPD_LOG_DEBUG(__FUNCTION__, "Update ARP for %s", show_ip_str(arp_msg->ipv4_addr));
+            ICCPD_LOG_NOTICE(__FUNCTION__, "Update ARP for %s by ARP reply, intf %s mac [%02X:%02X:%02X:%02X:%02X:%02X]",
+                            show_ip_str(arp_msg->ipv4_addr), arp_msg->name,
+                            arp_msg->mac_addr[0], arp_msg->mac_addr[1], arp_msg->mac_addr[2], arp_msg->mac_addr[3], arp_msg->mac_addr[4], arp_msg->mac_addr[5]);
         }
         break;
     }
